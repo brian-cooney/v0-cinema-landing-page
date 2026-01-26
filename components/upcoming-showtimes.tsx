@@ -65,15 +65,8 @@ export async function UpcomingShowtimes() {
               return (
               <div
                 key={showtime.id}
-                className="group relative flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden transition-all hover:border-primary/30"
+                className="group flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden transition-all hover:border-primary/30"
               >
-                {isSoldOut && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
-                    <div className="rounded-md bg-destructive px-4 py-2 text-sm font-semibold uppercase tracking-wider text-destructive-foreground">
-                      Sold Out
-                    </div>
-                  </div>
-                )}
                 {showtime.image_url ? (
                   <div className="relative aspect-[16/9] w-full overflow-hidden">
                     <Image
