@@ -17,12 +17,14 @@ export const metadata: Metadata = {
     title: 'Embassy Cinema | Intimate Film Experience',
     description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films. Free bookings available.',
     siteName: 'Embassy Cinema',
+    url: 'https://www.embassycinema.com',
     images: [
       {
-        url: '/og-image.jpg',
+        url: 'https://www.embassycinema.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Embassy Cinema - An intimate art deco cinema experience',
+        type: 'image/jpeg',
       },
     ],
     locale: 'en_US',
@@ -32,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Embassy Cinema | Intimate Film Experience',
     description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films. Free bookings available.',
-    images: ['/og-image.jpg'],
+    images: ['https://www.embassycinema.com/og-image.jpg'],
   },
   icons: {
     icon: [
