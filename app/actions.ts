@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { sendBookingConfirmation } from "@/lib/email"
 
 interface BookSeatParams {
   showtimeId: string
@@ -34,10 +35,17 @@ export async function bookSeat({
     return { error: "This seat has already been booked" }
   }
 
+  // Get showtime details for the confirmation email
+  const { data: showtimeData } = await supabase
+    .from("showtimes")
+    .select("movie_title, showtime")
+    .eq("id", showtimeId)
+    .single()
+
   // Create the booking
   const { data, error } = await supabase
     .from("bookings")
-.insert({
+    .insert({
       showtime_id: showtimeId,
       seat_number: seatNumber,
       customer_name: customerName,
@@ -48,6 +56,17 @@ export async function bookSeat({
 
   if (error) {
     return { error: "Failed to create booking. Please try again." }
+  }
+
+  // Send confirmation email
+  if (showtimeData) {
+    await sendBookingConfirmation({
+      to: customerEmail,
+      customerName,
+      movieTitle: showtimeData.movie_title,
+      showtime: showtimeData.showtime,
+      seatNumber,
+    })
   }
 
   return { success: true, booking: data }
