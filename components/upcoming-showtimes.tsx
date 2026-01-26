@@ -1,8 +1,10 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Calendar, Clock, Film } from "lucide-react"
+import { Calendar, Clock, Film, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
+
+const TOTAL_SEATS = 6
 
 interface Showtime {
   id: string
@@ -10,6 +12,7 @@ interface Showtime {
   movie_description: string
   showtime: string
   image_url: string | null
+  bookings: { count: number }[]
 }
 
 export async function UpcomingShowtimes() {
@@ -17,7 +20,7 @@ export async function UpcomingShowtimes() {
 
   const { data: showtimes } = await supabase
     .from("showtimes")
-    .select("*")
+    .select("*, bookings(count)")
     .gte("showtime", new Date().toISOString())
     .order("showtime", { ascending: true })
     .limit(6)
@@ -54,11 +57,23 @@ export async function UpcomingShowtimes() {
 
         {showtimes && showtimes.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {showtimes.map((showtime: Showtime) => (
+            {showtimes.map((showtime: Showtime) => {
+              const bookedCount = showtime.bookings?.[0]?.count ?? 0
+              const seatsRemaining = TOTAL_SEATS - bookedCount
+              const isSoldOut = seatsRemaining <= 0
+
+              return (
               <div
                 key={showtime.id}
-                className="group flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden transition-all hover:border-primary/30"
+                className="group relative flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden transition-all hover:border-primary/30"
               >
+                {isSoldOut && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
+                    <div className="rounded-md bg-destructive px-4 py-2 text-sm font-semibold uppercase tracking-wider text-destructive-foreground">
+                      Sold Out
+                    </div>
+                  </div>
+                )}
                 {showtime.image_url ? (
                   <div className="relative aspect-[16/9] w-full overflow-hidden">
                     <Image
@@ -90,14 +105,35 @@ export async function UpcomingShowtimes() {
                       {formatTime(showtime.showtime)}
                     </span>
                   </div>
-<Button asChild variant="outline" size="sm" className="w-full bg-transparent">
-                    <Link href={`/book?showtime=${showtime.id}`}>
-                      Reserve Seats
-                    </Link>
+                  <div className="mb-4 flex items-center gap-1.5 text-sm">
+                    <Users className="h-4 w-4 text-primary" />
+                    {isSoldOut ? (
+                      <span className="text-destructive font-medium">No seats available</span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {seatsRemaining} {seatsRemaining === 1 ? "seat" : "seats"} remaining
+                      </span>
+                    )}
+                  </div>
+                  <Button 
+                    asChild={!isSoldOut} 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full bg-transparent"
+                    disabled={isSoldOut}
+                  >
+                    {isSoldOut ? (
+                      <span>Sold Out</span>
+                    ) : (
+                      <Link href={`/book?showtime=${showtime.id}`}>
+                        Reserve Seats
+                      </Link>
+)}
                   </Button>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <div className="rounded-lg border border-border/50 bg-card p-12 text-center">
