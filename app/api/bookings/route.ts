@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
   const { data: bookings, error } = await supabase
     .from("bookings")
-    .select("seat_number")
+    .select("seat_number, customer_name")
     .eq("showtime_id", showtimeId)
 
   if (error) {

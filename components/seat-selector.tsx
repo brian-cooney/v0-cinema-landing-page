@@ -1,8 +1,6 @@
 "use client"
 
-import React from "react"
-
-import { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import useSWR, { mutate } from "swr"
 import { CheckCircle2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,6 +10,7 @@ import { bookSeat } from "@/app/actions"
 
 interface Booking {
   seat_number: number
+  customer_name: string
 }
 
 const TOTAL_SEATS = 6
@@ -21,6 +20,98 @@ const fetcher = async (url: string) => {
   const res = await fetch(url)
   if (!res.ok) throw new Error("Failed to fetch")
   return res.json()
+}
+
+interface PopcornPiece {
+  id: number
+  left: number
+  delay: number
+  duration: number
+  size: number
+  rotation: number
+}
+
+function PopcornConfetti({ show }: { show: boolean }) {
+  const [pieces, setPieces] = useState<PopcornPiece[]>([])
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (show) {
+      const newPieces: PopcornPiece[] = Array.from({ length: 50 }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        delay: Math.random() * 0.5,
+        duration: 2 + Math.random() * 2,
+        size: 16 + Math.random() * 16,
+        rotation: Math.random() * 360,
+      }))
+      setPieces(newPieces)
+    } else {
+      setPieces([])
+    }
+  }, [show])
+
+  if (!show || pieces.length === 0) return null
+
+  return (
+    <div
+      ref={containerRef}
+      className="fixed inset-0 pointer-events-none overflow-hidden z-50"
+      aria-hidden="true"
+    >
+      {pieces.map((piece) => (
+        <div
+          key={piece.id}
+          className="absolute animate-confetti-fall"
+          style={{
+            left: `${piece.left}%`,
+            top: "-40px",
+            animationDelay: `${piece.delay}s`,
+            animationDuration: `${piece.duration}s`,
+          }}
+        >
+          <svg
+            width={piece.size}
+            height={piece.size}
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ transform: `rotate(${piece.rotation}deg)` }}
+          >
+            {/* Popcorn bucket */}
+            <path
+              d="M5 8h14l-2 12H7L5 8z"
+              fill="#DC2626"
+              stroke="#991B1B"
+              strokeWidth="0.5"
+            />
+            {/* Red stripes on bucket */}
+            <path d="M7 8v12M11 8l-1 12M13 8l1 12M17 8v12" stroke="#FEE2E2" strokeWidth="0.8" />
+            {/* Popcorn pieces */}
+            <circle cx="8" cy="6" r="2.5" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="0.3" />
+            <circle cx="12" cy="4" r="2.8" fill="#FFFBEB" stroke="#F59E0B" strokeWidth="0.3" />
+            <circle cx="16" cy="6" r="2.5" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="0.3" />
+            <circle cx="10" cy="5" r="2" fill="#FFFBEB" stroke="#F59E0B" strokeWidth="0.3" />
+            <circle cx="14" cy="5" r="2" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="0.3" />
+          </svg>
+        </div>
+      ))}
+      <style jsx>{`
+        @keyframes confetti-fall {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+          }
+        }
+        .animate-confetti-fall {
+          animation: confetti-fall linear forwards;
+        }
+      `}</style>
+    </div>
+  )
 }
 
 interface SeatSelectorProps {
@@ -33,6 +124,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [bookingSuccess, setBookingSuccess] = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const { data, isLoading } = useSWR<{ bookings: Booking[] }>(
@@ -41,7 +133,15 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
     { refreshInterval: 5000 }
   )
 
+  const bookingsMap = new Map(
+    data?.bookings?.map((b) => [b.seat_number, b.customer_name]) || []
+  )
   const bookedSeats = new Set(data?.bookings?.map((b) => b.seat_number) || [])
+
+  const getFirstName = (fullName: string) => {
+    const firstName = fullName.split(" ")[0]
+    return firstName.length > 6 ? firstName.slice(0, 5) + "..." : firstName
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,8 +161,10 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
       if (result.error) {
         setError(result.error)
       } else {
+        setShowConfetti(true)
         setBookingSuccess(true)
         mutate(`/api/bookings?showtimeId=${showtimeId}`)
+        setTimeout(() => setShowConfetti(false), 4000)
       }
     } catch {
       setError("Something went wrong. Please try again.")
@@ -73,7 +175,9 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
 
   if (bookingSuccess) {
     return (
-      <div className="rounded-lg border border-primary/30 bg-card p-8 text-center">
+      <>
+        <PopcornConfetti show={showConfetti} />
+        <div className="rounded-lg border border-primary/30 bg-card p-8 text-center">
         <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-primary" />
         <h3 className="font-serif text-2xl font-semibold">
           Booking Confirmed!
@@ -97,6 +201,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
           Book Another Seat
         </Button>
       </div>
+      </>
     )
   }
 
@@ -133,13 +238,15 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-card text-foreground hover:border-primary/50"
                     }`}
-                    aria-label={`Seat ${SEAT_LABELS[seatNum - 1]}${isBooked ? " (booked)" : ""}`}
+                    aria-label={`Seat ${SEAT_LABELS[seatNum - 1]}${isBooked ? ` (booked by ${bookingsMap.get(seatNum)})` : ""}`}
                   >
                     <span className="text-sm font-medium">
                       {SEAT_LABELS[seatNum - 1]}
                     </span>
                     {isBooked && (
-                      <span className="text-[10px] uppercase">Taken</span>
+                      <span className="text-[10px] truncate max-w-full px-1">
+                        {getFirstName(bookingsMap.get(seatNum) || "")}
+                      </span>
                     )}
                   </button>
                 )
@@ -163,13 +270,15 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border bg-card text-foreground hover:border-primary/50"
                     }`}
-                    aria-label={`Seat ${SEAT_LABELS[seatNum - 1]}${isBooked ? " (booked)" : ""}`}
+                    aria-label={`Seat ${SEAT_LABELS[seatNum - 1]}${isBooked ? ` (booked by ${bookingsMap.get(seatNum)})` : ""}`}
                   >
                     <span className="text-sm font-medium">
                       {SEAT_LABELS[seatNum - 1]}
                     </span>
                     {isBooked && (
-                      <span className="text-[10px] uppercase">Taken</span>
+                      <span className="text-[10px] truncate max-w-full px-1">
+                        {getFirstName(bookingsMap.get(seatNum) || "")}
+                      </span>
                     )}
                   </button>
                 )
