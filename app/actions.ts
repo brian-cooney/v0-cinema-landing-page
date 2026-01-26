@@ -1,0 +1,140 @@
+"use server"
+
+import { createClient } from "@/lib/supabase/server"
+
+interface BookSeatParams {
+  showtimeId: string
+  seatNumber: number
+  customerName: string
+  customerEmail: string
+}
+
+export async function bookSeat({
+  showtimeId,
+  seatNumber,
+  customerName,
+  customerEmail,
+}: BookSeatParams) {
+  const supabase = await createClient()
+
+  // Validate seat number
+  if (seatNumber < 1 || seatNumber > 6) {
+    return { error: "Invalid seat number" }
+  }
+
+  // Check if the seat is already booked
+  const { data: existingBooking } = await supabase
+    .from("bookings")
+    .select("id")
+    .eq("showtime_id", showtimeId)
+    .eq("seat_number", seatNumber)
+    .maybeSingle()
+
+  if (existingBooking) {
+    return { error: "This seat has already been booked" }
+  }
+
+  // Create the booking
+  const { data, error } = await supabase
+    .from("bookings")
+.insert({
+      showtime_id: showtimeId,
+      seat_number: seatNumber,
+      customer_name: customerName,
+      customer_email: customerEmail,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    return { error: "Failed to create booking. Please try again." }
+  }
+
+  return { success: true, booking: data }
+}
+
+// Admin actions for managing showtimes
+
+interface CreateShowtimeParams {
+  movieTitle: string
+  movieDescription: string
+  showtime: string
+  imageUrl?: string
+}
+
+export async function createShowtime({
+  movieTitle,
+  movieDescription,
+  showtime,
+  imageUrl,
+}: CreateShowtimeParams) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("showtimes")
+    .insert({
+      movie_title: movieTitle,
+      movie_description: movieDescription,
+      showtime: showtime,
+      image_url: imageUrl || null,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    return { error: "Failed to create showtime. Please try again." }
+  }
+
+  return { success: true, showtime: data }
+}
+
+interface UpdateShowtimeParams {
+  id: string
+  movieTitle: string
+  movieDescription: string
+  showtime: string
+  imageUrl?: string | null
+}
+
+export async function updateShowtime({
+  id,
+  movieTitle,
+  movieDescription,
+  showtime,
+  imageUrl,
+}: UpdateShowtimeParams) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("showtimes")
+    .update({
+      movie_title: movieTitle,
+      movie_description: movieDescription,
+      showtime: showtime,
+      image_url: imageUrl,
+    })
+    .eq("id", id)
+    .select()
+    .single()
+
+  if (error) {
+    return { error: "Failed to update showtime. Please try again." }
+  }
+
+  return { success: true, showtime: data }
+}
+
+export async function deleteShowtime(id: string) {
+  const supabase = await createClient()
+
+  // First delete all bookings for this showtime
+  await supabase.from("bookings").delete().eq("showtime_id", id)
+
+  const { error } = await supabase.from("showtimes").delete().eq("id", id)
+
+  if (error) {
+    return { error: "Failed to delete showtime. Please try again." }
+  }
+
+  return { success: true }
+}
