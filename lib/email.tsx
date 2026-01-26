@@ -31,7 +31,7 @@ export async function sendBookingConfirmation({
   })
 
   const { data, error } = await resend.emails.send({
-    from: "Embassy Cinema <onboarding@resend.dev>",
+    from: "Embassy Cinema <bookings@embassycinema.com>",
     to: [to],
     subject: `Booking Confirmed: ${movieTitle} at Embassy Cinema`,
     html: `
