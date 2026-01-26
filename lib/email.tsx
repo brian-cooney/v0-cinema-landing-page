@@ -25,24 +25,52 @@ function generateICSFile({
   // Assume movie duration of 2 hours
   const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000)
   
-  // Format dates for ICS (YYYYMMDDTHHMMSS format in UTC)
-  const formatICSDate = (date: Date): string => {
+  // Format dates for ICS in local time (YYYYMMDDTHHMMSS format)
+  const formatICSDateLocal = (date: Date): string => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}${month}${day}T${hours}${minutes}${seconds}`
+  }
+  
+  // Format for DTSTAMP (must be UTC)
+  const formatICSDateUTC = (date: Date): string => {
     return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
   }
   
   const uid = `${startDate.getTime()}-${seatNumber}-${customerName.replace(/\s/g, '')}@embassycinema.com`
-  const now = formatICSDate(new Date())
+  const now = formatICSDateUTC(new Date())
   
   return `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Embassy Cinema//Booking System//EN
 CALSCALE:GREGORIAN
 METHOD:REQUEST
+BEGIN:VTIMEZONE
+TZID:Europe/Rome
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
 BEGIN:VEVENT
 UID:${uid}
 DTSTAMP:${now}
-DTSTART:${formatICSDate(startDate)}
-DTEND:${formatICSDate(endDate)}
+DTSTART;TZID=Europe/Rome:${formatICSDateLocal(startDate)}
+DTEND;TZID=Europe/Rome:${formatICSDateLocal(endDate)}
 SUMMARY:${movieTitle} at Embassy Cinema
 DESCRIPTION:Your booking confirmation for ${movieTitle}.\\n\\nSeat: ${seatNumber}\\nPlease arrive 10 minutes early. No ticket required - just give your name at the door.
 LOCATION:Embassy Cinema

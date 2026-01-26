@@ -157,3 +157,107 @@ export async function deleteShowtime(id: string) {
 
   return { success: true }
 }
+
+// Admin booking management
+
+interface AdminBookSeatParams {
+  showtimeId: string
+  seatNumber: number
+  customerName: string
+  customerEmail: string
+  sendEmail?: boolean
+}
+
+export async function adminBookSeat({
+  showtimeId,
+  seatNumber,
+  customerName,
+  customerEmail,
+  sendEmail = true,
+}: AdminBookSeatParams) {
+  const supabase = await createClient()
+
+  // Validate seat number
+  if (seatNumber < 1 || seatNumber > 6) {
+    return { error: "Invalid seat number" }
+  }
+
+  // Check if the seat is already booked
+  const { data: existingBooking } = await supabase
+    .from("bookings")
+    .select("id")
+    .eq("showtime_id", showtimeId)
+    .eq("seat_number", seatNumber)
+    .maybeSingle()
+
+  if (existingBooking) {
+    return { error: "This seat has already been booked" }
+  }
+
+  // Get showtime details for the confirmation email
+  const { data: showtimeData } = await supabase
+    .from("showtimes")
+    .select("movie_title, showtime")
+    .eq("id", showtimeId)
+    .single()
+
+  // Create the booking
+  const { data, error } = await supabase
+    .from("bookings")
+    .insert({
+      showtime_id: showtimeId,
+      seat_number: seatNumber,
+      customer_name: customerName,
+      customer_email: customerEmail,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    return { error: "Failed to create booking. Please try again." }
+  }
+
+  // Send confirmation email if requested
+  if (sendEmail && showtimeData) {
+    await sendBookingConfirmation({
+      to: customerEmail,
+      customerName,
+      movieTitle: showtimeData.movie_title,
+      showtime: showtimeData.showtime,
+      seatNumber,
+    })
+  }
+
+  return { success: true, booking: data }
+}
+
+export async function adminDeleteBooking(bookingId: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from("bookings")
+    .delete()
+    .eq("id", bookingId)
+
+  if (error) {
+    return { error: "Failed to delete booking. Please try again." }
+  }
+
+  return { success: true }
+}
+
+export async function getShowtimeBookings(showtimeId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("*")
+    .eq("showtime_id", showtimeId)
+    .order("seat_number", { ascending: true })
+
+  if (error) {
+    return { error: "Failed to fetch bookings" }
+  }
+
+  return { success: true, bookings: data }
+}
