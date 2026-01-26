@@ -18,12 +18,10 @@ export async function sendBookingConfirmation({
   seatNumber,
 }: BookingConfirmationParams) {
   const date = new Date(showtime)
-  const formattedDate = date.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  })
+  const day = date.getDate().toString().padStart(2, "0")
+  const month = (date.getMonth() + 1).toString().padStart(2, "0")
+  const year = date.getFullYear()
+  const formattedDate = `${day}/${month}/${year}`
   const formattedTime = date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
