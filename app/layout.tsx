@@ -16,11 +16,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Embassy Cinema | Intimate Film Experience',
     description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films. Free bookings available.',
-    url: 'https://embassy-cinema.vercel.app',
     siteName: 'Embassy Cinema',
     images: [
       {
-        url: '/hero-cinema.webp',
+        url: '/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Embassy Cinema - An intimate art deco cinema experience',
@@ -33,7 +32,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Embassy Cinema | Intimate Film Experience',
     description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films. Free bookings available.',
-    images: ['/hero-cinema.webp'],
+    images: ['/og-image.jpg'],
   },
   icons: {
     icon: [
