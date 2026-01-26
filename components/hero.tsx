@@ -22,7 +22,7 @@ export function Hero() {
           Est. 2025
         </p>
         <h1 className="font-serif text-5xl font-semibold leading-tight tracking-tight text-balance md:text-7xl">
-          Cinema club is back for 2026, screening a new film every Wednesday. 
+          Cinema club Finale Ligure, every Wednesday. 
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
           Italy's smallest screening room with just six seats. No crowds or
