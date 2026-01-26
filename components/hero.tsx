@@ -25,7 +25,7 @@ export function Hero() {
           Finalborgo cinema club, screening every Wednesday. 
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
-          Italy's smallest screening room with just six seats. No crowds or
+          Italy's smallest cinema with just six seats. No crowds or
           distractions. Experience films the way
           their creators intended.
         </p>
