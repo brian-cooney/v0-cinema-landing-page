@@ -17,7 +17,7 @@ export function Header() {
         <nav className="flex items-center gap-6">
           <Link
             href="#about"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="hidden sm:block text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             About
           </Link>
