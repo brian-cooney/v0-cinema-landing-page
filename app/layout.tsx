@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   title: 'Embassy Cinema | Intimate Film Experience',
   description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films at Embassy Cinema. Free bookings available.',
   generator: 'v0.app',
-  metadataBase: new URL('https://embassy-cinema.vercel.app'),
+  metadataBase: new URL('https://www.embassycinema.com'),
   openGraph: {
     title: 'Embassy Cinema | Intimate Film Experience',
     description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films. Free bookings available.',
