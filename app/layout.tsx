@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: 'Embassy Cinema',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/hero-cinema.webp',
         width: 1200,
         height: 630,
         alt: 'Embassy Cinema - An intimate art deco cinema experience',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Embassy Cinema | Intimate Film Experience',
     description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films. Free bookings available.',
-    images: ['/og-image.jpg'],
+    images: ['/hero-cinema.webp'],
   },
   icons: {
     icon: [
