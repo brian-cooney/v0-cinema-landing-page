@@ -23,7 +23,7 @@ export function Header() {
           </Link>
           <Link
             href="#showtimes"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="hidden sm:block text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             Showtimes
           </Link>
