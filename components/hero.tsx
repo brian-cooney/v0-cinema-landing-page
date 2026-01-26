@@ -12,14 +12,14 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         <p className="mb-4 text-sm font-medium uppercase tracking-[0.3em] text-primary">
-          Est. 2024
+          Est. 2025
         </p>
         <h1 className="font-serif text-5xl font-semibold leading-tight tracking-tight text-balance md:text-7xl">
-          Cinema the Way It Was Meant to Be
+          Cinema club is back for 2026, screening a new film every Wednesday. 
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty">
-          An intimate screening room with just six seats. No crowds, no
-          distractions—just you and the silver screen. Experience films the way
+          Italy's smallest screening room with just six seats. No crowds or
+          distractions. Experience films the way
           their creators intended.
         </p>
         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
