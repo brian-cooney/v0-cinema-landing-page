@@ -30,6 +30,7 @@ export async function PastScreenings() {
       weekday: "short",
       month: "short",
       day: "numeric",
+      year: "numeric",
       timeZone: "Europe/Rome",
     })
   }
@@ -64,10 +65,10 @@ export async function PastScreenings() {
           {showtimes.map((showtime: Showtime) => (
             <div
               key={showtime.id}
-              className="group flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden opacity-75"
+              className="group flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden"
             >
               {showtime.image_url ? (
-                <div className="relative aspect-[16/9] w-full overflow-hidden grayscale">
+                <div className="relative aspect-[16/9] w-full overflow-hidden">
                   <Image
                     src={showtime.image_url || "/placeholder.svg"}
                     alt={showtime.movie_title}
@@ -76,7 +77,7 @@ export async function PastScreenings() {
                   />
                 </div>
               ) : (
-                <div className="flex aspect-[16/9] w-full items-center justify-center bg-muted/30 grayscale">
+                <div className="flex aspect-[16/9] w-full items-center justify-center bg-muted/30">
                   <Film className="h-12 w-12 text-muted-foreground/50" />
                 </div>
               )}
