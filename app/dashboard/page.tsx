@@ -7,19 +7,29 @@ import { Button } from "@/components/ui/button"
 import { Calendar, Clock, MapPin, Ticket, Film } from "lucide-react"
 import Link from "next/link"
 
+interface Showtime {
+  id: string
+  movie_title: string
+  showtime: string
+  description: string
+  image_url: string | null
+  running_time: number | null
+}
+
+interface BookingRaw {
+  id: string
+  seat_number: number
+  customer_name: string
+  created_at: string
+  showtimes: Showtime | Showtime[] | null
+}
+
 interface Booking {
   id: string
   seat_number: number
   customer_name: string
   created_at: string
-  showtimes: {
-    id: string
-    movie_title: string
-    showtime: string
-    description: string
-    image_url: string | null
-    running_time: number | null
-  }
+  showtimes: Showtime
 }
 
 const SEAT_LABELS = ["A1", "A2", "A3", "B1", "B2", "B3"]
@@ -54,15 +64,26 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
   
   console.log("[v0] Dashboard - User ID:", user.id)
-  console.log("[v0] Dashboard - Bookings query result:", { bookings, error })
+  console.log("[v0] Dashboard - Bookings query result:", JSON.stringify({ bookings, error }, null, 2))
 
   const now = new Date()
   
+  // Normalize bookings - handle both single object and array for showtimes relation
+  const normalizedBookings: Booking[] = ((bookings as BookingRaw[]) || [])
+    .filter(booking => booking.showtimes !== null)
+    .map(booking => ({
+      ...booking,
+      showtimes: Array.isArray(booking.showtimes) ? booking.showtimes[0] : booking.showtimes
+    }))
+    .filter(booking => booking.showtimes !== undefined) as Booking[]
+
+  console.log("[v0] Dashboard - Normalized bookings:", JSON.stringify(normalizedBookings, null, 2))
+  
   // Separate upcoming and past bookings
-  const upcomingBookings = (bookings as Booking[] || []).filter(
+  const upcomingBookings = normalizedBookings.filter(
     booking => new Date(booking.showtimes.showtime) > now
   )
-  const pastBookings = (bookings as Booking[] || []).filter(
+  const pastBookings = normalizedBookings.filter(
     booking => new Date(booking.showtimes.showtime) <= now
   )
 
