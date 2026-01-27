@@ -96,12 +96,97 @@ function TimeOutLogo({ className }: { className?: string }) {
   )
 }
 
+function LaRepubblicaLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 180 40"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <text x="0" y="28" fontSize="22" fontWeight="700" fontFamily="Georgia, serif" fontStyle="italic">
+        la Repubblica
+      </text>
+    </svg>
+  )
+}
+
+function CorriereDellaSeraLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 220 40"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <text x="0" y="28" fontSize="20" fontWeight="700" fontFamily="Georgia, serif" fontStyle="italic">
+        Corriere della Sera
+      </text>
+    </svg>
+  )
+}
+
+function RAICinemaLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 150 40"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <text x="0" y="30" fontSize="26" fontWeight="900" fontFamily="Arial, sans-serif" letterSpacing="2">
+        RAI CINEMA
+      </text>
+    </svg>
+  )
+}
+
+function CinecittaLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 150 40"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <text x="0" y="30" fontSize="26" fontWeight="700" fontFamily="Georgia, serif" letterSpacing="1">
+        Cinecittà
+      </text>
+    </svg>
+  )
+}
+
+function LaStampaLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 140 40"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <text x="0" y="28" fontSize="24" fontWeight="700" fontFamily="Georgia, serif" fontStyle="italic">
+        La Stampa
+      </text>
+    </svg>
+  )
+}
+
 const logoComponents = [
   { Component: GuardianLogo, name: "The Guardian", width: 200 },
+  { Component: LaRepubblicaLogo, name: "la Repubblica", width: 180 },
   { Component: SightSoundLogo, name: "Sight & Sound", width: 180 },
+  { Component: CorriereDellaSeraLogo, name: "Corriere della Sera", width: 220 },
   { Component: NYTimesLogo, name: "The New York Times", width: 260 },
+  { Component: RAICinemaLogo, name: "RAI Cinema", width: 150 },
   { Component: VarietyLogo, name: "Variety", width: 120 },
+  { Component: CinecittaLogo, name: "Cinecittà", width: 150 },
   { Component: EmpireLogo, name: "Empire", width: 130 },
+  { Component: LaStampaLogo, name: "La Stampa", width: 140 },
   { Component: TimeOutLogo, name: "Time Out", width: 130 },
 ]
 
