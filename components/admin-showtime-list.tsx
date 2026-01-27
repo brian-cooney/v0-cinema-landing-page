@@ -5,7 +5,8 @@ import React from "react"
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { Calendar, Clock, Edit2, Trash2, X, Check, Upload, ImageIcon, Users, Plus, ChevronDown, ChevronUp } from "lucide-react"
+import { Calendar, Clock, Edit2, Trash2, X, Check, Upload, ImageIcon, Users, Plus, ChevronDown, ChevronUp, Timer } from "lucide-react"
+import { formatRunningTime } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -38,6 +39,7 @@ interface Showtime {
   movie_description: string
   showtime: string
   image_url: string | null
+  running_time: number | null
 }
 
 interface AdminShowtimeListProps {
@@ -55,6 +57,7 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
     time: "",
     imageUrl: null as string | null,
     imagePreview: null as string | null,
+    runningTime: null as number | null,
   })
   const [isUpdating, setIsUpdating] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -81,6 +84,7 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
       month: "short",
       day: "numeric",
       year: "numeric",
+      timeZone: "Europe/Rome",
     })
   }
 
@@ -90,25 +94,35 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
+      timeZone: "Europe/Rome",
     })
   }
 
   const startEdit = (showtime: Showtime) => {
     const date = new Date(showtime.showtime)
+    // Format date and time in Italian timezone for editing
+    const dateInItaly = date.toLocaleDateString("sv-SE", { timeZone: "Europe/Rome" }) // sv-SE gives YYYY-MM-DD format
+    const timeInItaly = date.toLocaleTimeString("en-GB", { 
+      hour: "2-digit", 
+      minute: "2-digit", 
+      hour12: false,
+      timeZone: "Europe/Rome" 
+    })
     setEditingId(showtime.id)
     setEditForm({
       movieTitle: showtime.movie_title,
       movieDescription: showtime.movie_description,
-      date: date.toISOString().split("T")[0],
-      time: date.toTimeString().slice(0, 5),
+      date: dateInItaly,
+      time: timeInItaly,
       imageUrl: showtime.image_url,
       imagePreview: showtime.image_url,
+      runningTime: showtime.running_time,
     })
   }
 
   const cancelEdit = () => {
     setEditingId(null)
-    setEditForm({ movieTitle: "", movieDescription: "", date: "", time: "", imageUrl: null, imagePreview: null })
+    setEditForm({ movieTitle: "", movieDescription: "", date: "", time: "", imageUrl: null, imagePreview: null, runningTime: null })
   }
 
   const handleEditImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,7 +166,8 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
 
   const handleUpdate = async (id: string) => {
     setIsUpdating(true)
-    const showtime = new Date(`${editForm.date}T${editForm.time}`).toISOString()
+    // Combine date and time with explicit Italian timezone
+    const showtime = `${editForm.date}T${editForm.time}:00+01:00`
 
     const result = await updateShowtime({
       id,
@@ -160,6 +175,7 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
       movieDescription: editForm.movieDescription,
       showtime,
       imageUrl: editForm.imageUrl,
+      runningTime: editForm.runningTime,
     })
 
     if (!result.error) {
@@ -304,7 +320,7 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
                     placeholder="Description"
                     className="min-h-20 bg-background"
                   />
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-3">
                     <Input
                       type="date"
                       value={editForm.date}
@@ -318,6 +334,16 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
                       value={editForm.time}
                       onChange={(e) =>
                         setEditForm({ ...editForm, time: e.target.value })
+                      }
+                      className="bg-background"
+                    />
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder="Running time (min)"
+                      value={editForm.runningTime || ""}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, runningTime: e.target.value ? parseInt(e.target.value, 10) : null })
                       }
                       className="bg-background"
                     />
@@ -418,6 +444,12 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
                           <Clock className="h-4 w-4 text-primary" />
                           {formatTime(showtime.showtime)}
                         </span>
+                        {showtime.running_time && (
+                          <span className="flex items-center gap-1.5">
+                            <Timer className="h-4 w-4 text-primary" />
+                            {formatRunningTime(showtime.running_time)}
+                          </span>
+                        )}
                         {isPast(showtime.showtime) && (
                           <span className="rounded bg-muted px-2 py-0.5 text-xs">
                             Past

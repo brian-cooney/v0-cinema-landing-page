@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import Image from "next/image"
-import { Calendar, Clock, Film } from "lucide-react"
+import { Calendar, Clock, Film, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SeatSelector } from "@/components/seat-selector"
+import { formatRunningTime } from "@/lib/utils"
 
 interface Showtime {
   id: string
@@ -13,6 +14,7 @@ interface Showtime {
   movie_description: string
   showtime: string
   image_url: string | null
+  running_time: number | null
 }
 
 interface ShowtimeSelectorProps {
@@ -39,6 +41,7 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
       weekday: "long",
       month: "long",
       day: "numeric",
+      timeZone: "Europe/Rome",
     })
   }
 
@@ -48,12 +51,14 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
+      timeZone: "Europe/Rome",
     })
   }
 
   const getDateKey = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toISOString().split("T")[0]
+    // Use Italian timezone for date grouping
+    return date.toLocaleDateString("sv-SE", { timeZone: "Europe/Rome" }) // sv-SE gives YYYY-MM-DD format
   }
 
   // Group showtimes by date
@@ -95,7 +100,7 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
                 <p className="mt-2 text-muted-foreground">
                   {selectedShowtime.movie_description}
                 </p>
-                <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="h-4 w-4 text-primary" />
                     {formatDate(selectedShowtime.showtime)}
@@ -104,6 +109,12 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
                     <Clock className="h-4 w-4 text-primary" />
                     {formatTime(selectedShowtime.showtime)}
                   </span>
+                  {selectedShowtime.running_time && (
+                    <span className="flex items-center gap-1.5">
+                      <Timer className="h-4 w-4 text-primary" />
+                      {formatRunningTime(selectedShowtime.running_time)}
+                    </span>
+                  )}
                 </div>
               </div>
               <Button
@@ -170,9 +181,17 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
                   <p className="mt-1 line-clamp-2 flex-1 text-sm text-muted-foreground">
                     {showtime.movie_description}
                   </p>
-                  <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4 text-primary" />
-                    {formatTime(showtime.showtime)}
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="h-4 w-4 text-primary" />
+                      {formatTime(showtime.showtime)}
+                    </span>
+                    {showtime.running_time && (
+                      <span className="flex items-center gap-1.5">
+                        <Timer className="h-4 w-4 text-primary" />
+                        {formatRunningTime(showtime.running_time)}
+                      </span>
+                    )}
                   </div>
                 </div>
               </button>
