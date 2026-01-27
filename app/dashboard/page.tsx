@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   }
 
   // Fetch user's bookings with showtime details
-  const { data: bookings } = await supabase
+  const { data: bookings, error } = await supabase
     .from("bookings")
     .select(`
       id,
@@ -52,6 +52,9 @@ export default async function DashboardPage() {
     `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
+  
+  console.log("[v0] Dashboard - User ID:", user.id)
+  console.log("[v0] Dashboard - Bookings query result:", { bookings, error })
 
   const now = new Date()
   
