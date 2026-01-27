@@ -8,6 +8,7 @@ interface BookSeatParams {
   seatNumber: number
   customerName: string
   customerEmail: string
+  userId?: string
 }
 
 export async function bookSeat({
@@ -15,6 +16,7 @@ export async function bookSeat({
   seatNumber,
   customerName,
   customerEmail,
+  userId,
 }: BookSeatParams) {
   const supabase = await createClient()
 
@@ -42,7 +44,7 @@ export async function bookSeat({
     .eq("id", showtimeId)
     .single()
 
-  // Create the booking
+  // Create the booking with user_id if provided
   const { data, error } = await supabase
     .from("bookings")
     .insert({
@@ -50,6 +52,7 @@ export async function bookSeat({
       seat_number: seatNumber,
       customer_name: customerName,
       customer_email: customerEmail,
+      user_id: userId || null,
     })
     .select()
     .single()
