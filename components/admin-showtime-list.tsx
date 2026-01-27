@@ -6,6 +6,7 @@ import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Calendar, Clock, Edit2, Trash2, X, Check, Upload, ImageIcon, Users, Plus, ChevronDown, ChevronUp, Timer } from "lucide-react"
+import { formatRunningTime } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -446,7 +447,7 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
                         {showtime.running_time && (
                           <span className="flex items-center gap-1.5">
                             <Timer className="h-4 w-4 text-primary" />
-                            {showtime.running_time} min
+                            {formatRunningTime(showtime.running_time)}
                           </span>
                         )}
                         {isPast(showtime.showtime) && (

@@ -6,6 +6,7 @@ import Image from "next/image"
 import { Calendar, Clock, Film, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SeatSelector } from "@/components/seat-selector"
+import { formatRunningTime } from "@/lib/utils"
 
 interface Showtime {
   id: string
@@ -111,7 +112,7 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
                   {selectedShowtime.running_time && (
                     <span className="flex items-center gap-1.5">
                       <Timer className="h-4 w-4 text-primary" />
-                      {selectedShowtime.running_time} min
+                      {formatRunningTime(selectedShowtime.running_time)}
                     </span>
                   )}
                 </div>
@@ -188,7 +189,7 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
                     {showtime.running_time && (
                       <span className="flex items-center gap-1.5">
                         <Timer className="h-4 w-4 text-primary" />
-                        {showtime.running_time} min
+                        {formatRunningTime(showtime.running_time)}
                       </span>
                     )}
                   </div>

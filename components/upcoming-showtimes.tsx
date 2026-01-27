@@ -3,6 +3,7 @@ import Image from "next/image"
 import { Calendar, Clock, Film, Users, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
+import { formatRunningTime } from "@/lib/utils"
 
 const TOTAL_SEATS = 6
 
@@ -103,7 +104,7 @@ export async function UpcomingShowtimes() {
                     {showtime.running_time && (
                       <span className="flex items-center gap-1.5">
                         <Timer className="h-4 w-4 text-primary" />
-                        {showtime.running_time} min
+                        {formatRunningTime(showtime.running_time)}
                       </span>
                     )}
                   </div>
