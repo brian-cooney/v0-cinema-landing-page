@@ -3,6 +3,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { AdminShowtimeList } from "@/components/admin-showtime-list"
 import { AddShowtimeForm } from "@/components/add-showtime-form"
+import { AddPastScreeningForm } from "@/components/add-past-screening-form"
 import { LogoutButton } from "@/components/logout-button"
 
 interface Showtime {
@@ -58,7 +59,10 @@ export default async function AdminPage() {
             </div>
 
             <div className="mx-auto max-w-4xl space-y-12">
-              <AddShowtimeForm />
+              <div className="grid gap-8 lg:grid-cols-2">
+                <AddShowtimeForm />
+                <AddPastScreeningForm />
+              </div>
               <AdminShowtimeList showtimes={showtimes} />
             </div>
           </div>
