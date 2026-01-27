@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Film, Mail, ArrowLeft, Loader2 } from "lucide-react"
@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-export default function UserLoginPage() {
+function UserLoginForm() {
   const [email, setEmail] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -149,5 +149,39 @@ export default function UserLoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+function LoginFormFallback() {
+  return (
+    <div className="flex min-h-svh w-full flex-col items-center justify-center bg-background p-6">
+      <div className="mb-8 flex items-center gap-2 font-serif text-2xl font-medium">
+        <Film className="h-6 w-6 text-primary" />
+        Embassy Cinema
+      </div>
+      <div className="w-full max-w-sm">
+        <Card className="border-border/50 bg-card">
+          <CardHeader className="text-center">
+            <CardTitle className="font-serif text-2xl">Sign In</CardTitle>
+            <CardDescription>
+              Enter your email to receive a magic sign-in link
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+export default function UserLoginPage() {
+  return (
+    <Suspense fallback={<LoginFormFallback />}>
+      <UserLoginForm />
+    </Suspense>
   )
 }
