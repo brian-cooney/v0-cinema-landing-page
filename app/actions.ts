@@ -79,6 +79,7 @@ interface CreateShowtimeParams {
   movieDescription: string
   showtime: string
   imageUrl?: string
+  runningTime?: number
 }
 
 export async function createShowtime({
@@ -86,6 +87,7 @@ export async function createShowtime({
   movieDescription,
   showtime,
   imageUrl,
+  runningTime,
 }: CreateShowtimeParams) {
   const supabase = await createClient()
 
@@ -96,6 +98,7 @@ export async function createShowtime({
       movie_description: movieDescription,
       showtime: showtime,
       image_url: imageUrl || null,
+      running_time: runningTime || null,
     })
     .select()
     .single()
@@ -113,6 +116,7 @@ interface UpdateShowtimeParams {
   movieDescription: string
   showtime: string
   imageUrl?: string | null
+  runningTime?: number | null
 }
 
 export async function updateShowtime({
@@ -121,6 +125,7 @@ export async function updateShowtime({
   movieDescription,
   showtime,
   imageUrl,
+  runningTime,
 }: UpdateShowtimeParams) {
   const supabase = await createClient()
 
@@ -131,6 +136,7 @@ export async function updateShowtime({
       movie_description: movieDescription,
       showtime: showtime,
       image_url: imageUrl,
+      running_time: runningTime,
     })
     .eq("id", id)
     .select()

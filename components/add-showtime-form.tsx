@@ -80,6 +80,8 @@ export function AddShowtimeForm() {
     const movieDescription = formData.get("movieDescription") as string
     const date = formData.get("date") as string
     const time = formData.get("time") as string
+    const runningTimeStr = formData.get("runningTime") as string
+    const runningTime = runningTimeStr ? parseInt(runningTimeStr, 10) : null
 
     if (!movieTitle || !movieDescription || !date || !time) {
       setError("Please fill in all fields")
@@ -96,6 +98,7 @@ export function AddShowtimeForm() {
       movieDescription,
       showtime,
       imageUrl: imageUrl || undefined,
+      runningTime: runningTime || undefined,
     })
 
     if (result.error) {
@@ -191,6 +194,18 @@ export function AddShowtimeForm() {
               accept="image/*"
               className="hidden"
               onChange={handleImageUpload}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="runningTime">Running Time (minutes)</Label>
+            <Input
+              id="runningTime"
+              name="runningTime"
+              type="number"
+              min="1"
+              placeholder="e.g. 120"
+              className="bg-secondary/50"
             />
           </div>
 

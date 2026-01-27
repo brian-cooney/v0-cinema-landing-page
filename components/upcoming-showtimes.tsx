@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Calendar, Clock, Film, Users } from "lucide-react"
+import { Calendar, Clock, Film, Users, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
 
@@ -12,6 +12,7 @@ interface Showtime {
   movie_description: string
   showtime: string
   image_url: string | null
+  running_time: number | null
   bookings: { count: number }[]
 }
 
@@ -90,7 +91,7 @@ export async function UpcomingShowtimes() {
                   <p className="mb-4 line-clamp-2 flex-1 text-sm leading-relaxed text-muted-foreground">
                     {showtime.movie_description}
                   </p>
-                  <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <Calendar className="h-4 w-4 text-primary" />
                       {formatDate(showtime.showtime)}
@@ -99,6 +100,12 @@ export async function UpcomingShowtimes() {
                       <Clock className="h-4 w-4 text-primary" />
                       {formatTime(showtime.showtime)}
                     </span>
+                    {showtime.running_time && (
+                      <span className="flex items-center gap-1.5">
+                        <Timer className="h-4 w-4 text-primary" />
+                        {showtime.running_time} min
+                      </span>
+                    )}
                   </div>
                   <div className="mb-4 flex items-center gap-1.5 text-sm">
                     <Users className="h-4 w-4 text-primary" />
