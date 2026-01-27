@@ -11,7 +11,7 @@ interface Showtime {
   id: string
   movie_title: string
   showtime: string
-  description: string
+  movie_description: string
   image_url: string | null
   running_time: number | null
 }
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
         id,
         movie_title,
         showtime,
-        description,
+        movie_description,
         image_url,
         running_time
       )
@@ -155,7 +155,7 @@ export default async function DashboardPage() {
                         {booking.showtimes.movie_title}
                       </CardTitle>
                       <CardDescription className="line-clamp-2">
-                        {booking.showtimes.description}
+                        {booking.showtimes.movie_description}
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
