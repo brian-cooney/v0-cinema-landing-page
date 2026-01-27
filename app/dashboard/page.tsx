@@ -109,7 +109,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
-      <main className="flex-1 mt-2">
+      <main className="flex-1 mt-6">
         <div className="container mx-auto px-4 py-12">
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight">My Bookings</h1>
