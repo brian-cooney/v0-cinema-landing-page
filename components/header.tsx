@@ -51,7 +51,7 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
           <Film className="h-6 w-6 text-primary" />
-          <span className="font-serif text-xl font-semibold tracking-wide">
+          <span className="hidden sm:inline font-serif text-xl font-semibold tracking-wide">
             Embassy Cinema
           </span>
         </Link>
