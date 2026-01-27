@@ -1,12 +1,15 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from "react"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import useSWR, { mutate } from "swr"
-import { CheckCircle2, Loader2 } from "lucide-react"
+import { CheckCircle2, Loader2, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { bookSeat } from "@/app/actions"
+import { createClient } from "@/lib/supabase/client"
+import type { User } from "@supabase/supabase-js"
 
 interface Booking {
   seat_number: number
@@ -119,13 +122,37 @@ interface SeatSelectorProps {
 }
 
 export function SeatSelector({ showtimeId }: SeatSelectorProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null)
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [bookingSuccess, setBookingSuccess] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+
+  // Check authentication status
+  useEffect(() => {
+    const supabase = createClient()
+    
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      setIsCheckingAuth(false)
+    }
+    
+    checkUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsCheckingAuth(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const { data, isLoading } = useSWR<{ bookings: Booking[] }>(
     `/api/bookings?showtimeId=${showtimeId}`,
@@ -143,9 +170,18 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
     return firstName.length > 6 ? firstName.slice(0, 5) + "..." : firstName
   }
 
+  const handleSignIn = () => {
+    // Create redirect URL with current showtime selected
+    const currentShowtimeParam = searchParams.get("showtime")
+    const redirectUrl = currentShowtimeParam 
+      ? `/book?showtime=${currentShowtimeParam}` 
+      : pathname
+    router.push(`/auth/user-login?redirectTo=${encodeURIComponent(redirectUrl)}`)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedSeat || !name.trim() || !email.trim()) return
+    if (!selectedSeat || !name.trim() || !user?.email) return
 
     setIsSubmitting(true)
     setError(null)
@@ -155,7 +191,8 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
         showtimeId,
         seatNumber: selectedSeat,
         customerName: name.trim(),
-        customerEmail: email.trim(),
+        customerEmail: user.email,
+        userId: user.id,
       })
 
       if (result.error) {
@@ -184,7 +221,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
         </h3>
         <p className="mt-2 text-muted-foreground">
           Your seat {SEAT_LABELS[selectedSeat! - 1]} has been reserved. A
-          confirmation has been sent to {email}.
+          confirmation has been sent to {user?.email}.
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
           Remember: All screenings are free. Just show up and enjoy the film!
@@ -195,7 +232,6 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
             setBookingSuccess(false)
             setSelectedSeat(null)
             setName("")
-            setEmail("")
           }}
         >
           Book Another Seat
@@ -306,7 +342,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
 
       {/* Booking Form */}
       {selectedSeat && (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-6">
           <div className="rounded-lg border border-primary/30 bg-card p-6">
             <p className="mb-4 text-center text-sm text-muted-foreground">
               Selected seat:{" "}
@@ -315,54 +351,63 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
               </span>
             </p>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Your Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Enter your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
+            {isCheckingAuth ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+            ) : !user ? (
+              <div className="space-y-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Sign in to complete your booking
+                </p>
+                <Button onClick={handleSignIn} className="w-full">
+                  <Mail className="mr-2 h-4 w-4" />
+                  Sign In with Email
+                </Button>
               </div>
-            </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="rounded-md bg-secondary/50 p-3">
+                  <p className="text-xs text-muted-foreground">Signed in as</p>
+                  <p className="text-sm font-medium">{user.email}</p>
+                </div>
 
-            {error && (
-              <p className="mt-4 text-center text-sm text-destructive">
-                {error}
-              </p>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Your Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {error && (
+                  <p className="text-center text-sm text-destructive">
+                    {error}
+                  </p>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting || !name.trim()}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Booking...
+                    </>
+                  ) : (
+                    "Confirm Booking"
+                  )}
+                </Button>
+              </form>
             )}
-
-            <Button
-              type="submit"
-              className="mt-6 w-full"
-              disabled={isSubmitting || !name.trim() || !email.trim()}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Booking...
-                </>
-              ) : (
-                "Confirm Booking"
-              )}
-            </Button>
           </div>
-        </form>
+        </div>
       )}
     </div>
   )
