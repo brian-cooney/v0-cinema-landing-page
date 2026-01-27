@@ -95,14 +95,19 @@ export async function sendBookingConfirmation({
   seatNumber,
 }: BookingConfirmationParams) {
   const date = new Date(showtime)
-  const day = date.getDate().toString().padStart(2, "0")
-  const month = (date.getMonth() + 1).toString().padStart(2, "0")
-  const year = date.getFullYear()
-  const formattedDate = `${day}/${month}/${year}`
+  // Format date in Italian timezone
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Europe/Rome",
+  })
+  const formattedDate = formatter.format(date)
   const formattedTime = date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone: "Europe/Rome",
   })
   
   // Generate calendar invite

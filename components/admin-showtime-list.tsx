@@ -81,6 +81,7 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
       month: "short",
       day: "numeric",
       year: "numeric",
+      timeZone: "Europe/Rome",
     })
   }
 
@@ -90,17 +91,26 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
+      timeZone: "Europe/Rome",
     })
   }
 
   const startEdit = (showtime: Showtime) => {
     const date = new Date(showtime.showtime)
+    // Format date and time in Italian timezone for editing
+    const dateInItaly = date.toLocaleDateString("sv-SE", { timeZone: "Europe/Rome" }) // sv-SE gives YYYY-MM-DD format
+    const timeInItaly = date.toLocaleTimeString("en-GB", { 
+      hour: "2-digit", 
+      minute: "2-digit", 
+      hour12: false,
+      timeZone: "Europe/Rome" 
+    })
     setEditingId(showtime.id)
     setEditForm({
       movieTitle: showtime.movie_title,
       movieDescription: showtime.movie_description,
-      date: date.toISOString().split("T")[0],
-      time: date.toTimeString().slice(0, 5),
+      date: dateInItaly,
+      time: timeInItaly,
       imageUrl: showtime.image_url,
       imagePreview: showtime.image_url,
     })
@@ -152,7 +162,8 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
 
   const handleUpdate = async (id: string) => {
     setIsUpdating(true)
-    const showtime = new Date(`${editForm.date}T${editForm.time}`).toISOString()
+    // Combine date and time with explicit Italian timezone
+    const showtime = `${editForm.date}T${editForm.time}:00+01:00`
 
     const result = await updateShowtime({
       id,

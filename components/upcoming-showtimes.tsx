@@ -31,6 +31,7 @@ export async function UpcomingShowtimes() {
       weekday: "short",
       month: "short",
       day: "numeric",
+      timeZone: "Europe/Rome",
     })
   }
 
@@ -40,6 +41,7 @@ export async function UpcomingShowtimes() {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
+      timeZone: "Europe/Rome",
     })
   }
 

@@ -87,8 +87,9 @@ export function AddShowtimeForm() {
       return
     }
 
-    // Combine date and time into ISO string
-    const showtime = new Date(`${date}T${time}`).toISOString()
+    // Combine date and time with explicit Italian timezone
+    // This ensures the time is stored correctly as the admin intended it in Italian time
+    const showtime = `${date}T${time}:00+01:00`
 
     const result = await createShowtime({
       movieTitle,

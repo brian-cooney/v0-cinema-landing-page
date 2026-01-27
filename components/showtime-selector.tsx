@@ -39,6 +39,7 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
       weekday: "long",
       month: "long",
       day: "numeric",
+      timeZone: "Europe/Rome",
     })
   }
 
@@ -48,12 +49,14 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
+      timeZone: "Europe/Rome",
     })
   }
 
   const getDateKey = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toISOString().split("T")[0]
+    // Use Italian timezone for date grouping
+    return date.toLocaleDateString("sv-SE", { timeZone: "Europe/Rome" }) // sv-SE gives YYYY-MM-DD format
   }
 
   // Group showtimes by date
