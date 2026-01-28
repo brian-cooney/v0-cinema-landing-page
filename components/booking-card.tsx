@@ -4,8 +4,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,8 +15,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Calendar, Clock, MapPin, Pencil, Trash2, Loader2, X, Check } from "lucide-react"
-import { cancelBooking, updateBooking, getAvailableSeats } from "@/app/actions"
+import { Calendar, Clock, MapPin, Trash2, Loader2 } from "lucide-react"
+import { cancelBooking } from "@/app/actions"
 
 interface Showtime {
   id: string
@@ -44,15 +42,8 @@ interface BookingCardProps {
 
 export function BookingCard({ booking, seatLabels }: BookingCardProps) {
   const router = useRouter()
-  const [isEditing, setIsEditing] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
-  const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  const [customerName, setCustomerName] = useState(booking.customer_name)
-  const [seatNumber, setSeatNumber] = useState(booking.seat_number)
-  const [availableSeats, setAvailableSeats] = useState<number[]>([])
-  const [bookedSeats, setBookedSeats] = useState<number[]>([])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -73,46 +64,6 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
     })
   }
 
-  const handleStartEdit = async () => {
-    setError(null)
-    // Fetch available seats
-    const { availableSeats: available, bookedSeats: booked } = await getAvailableSeats(
-      booking.showtimes.id,
-      booking.id
-    )
-    setAvailableSeats(available)
-    setBookedSeats(booked)
-    setIsEditing(true)
-  }
-
-  const handleCancelEdit = () => {
-    setIsEditing(false)
-    setCustomerName(booking.customer_name)
-    setSeatNumber(booking.seat_number)
-    setError(null)
-  }
-
-  const handleUpdate = async () => {
-    setIsUpdating(true)
-    setError(null)
-
-    const result = await updateBooking({
-      bookingId: booking.id,
-      customerName,
-      seatNumber,
-    })
-
-    if (result.error) {
-      setError(result.error)
-      setIsUpdating(false)
-      return
-    }
-
-    setIsEditing(false)
-    setIsUpdating(false)
-    router.refresh()
-  }
-
   const handleCancel = async () => {
     setIsCancelling(true)
     setError(null)
@@ -126,106 +77,6 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
     }
 
     router.refresh()
-  }
-
-  if (isEditing) {
-    return (
-      <Card className="overflow-hidden border-primary">
-        {booking.showtimes.image_url && (
-          <div className="aspect-video w-full overflow-hidden opacity-50">
-            <img
-              src={booking.showtimes.image_url}
-              alt={booking.showtimes.movie_title}
-              className="h-full w-full object-cover"
-            />
-          </div>
-        )}
-        <CardHeader>
-          <CardTitle className="line-clamp-1">
-            Edit Booking
-          </CardTitle>
-          <CardDescription>
-            {booking.showtimes.movie_title}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="customerName">Name</Label>
-            <Input
-              id="customerName"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="Your name"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Select Seat</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {[1, 2, 3, 4, 5, 6].map((seat) => {
-                const isBooked = bookedSeats.includes(seat)
-                const isSelected = seatNumber === seat
-                const isCurrentSeat = booking.seat_number === seat
-
-                return (
-                  <button
-                    key={seat}
-                    type="button"
-                    disabled={isBooked}
-                    onClick={() => setSeatNumber(seat)}
-                    className={`
-                      rounded-md border p-2 text-sm font-medium transition-colors
-                      ${isSelected 
-                        ? "border-primary bg-primary text-primary-foreground" 
-                        : isBooked
-                          ? "cursor-not-allowed border-muted bg-muted text-muted-foreground"
-                          : "border-border hover:border-primary hover:bg-primary/10"
-                      }
-                      ${isCurrentSeat && !isSelected ? "ring-1 ring-primary/50" : ""}
-                    `}
-                  >
-                    {seatLabels[seat - 1]}
-                    {isCurrentSeat && !isSelected && (
-                      <span className="ml-1 text-xs text-muted-foreground">(current)</span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={handleCancelEdit}
-              disabled={isUpdating}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Cancel
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={handleUpdate}
-              disabled={isUpdating || !customerName.trim()}
-            >
-              {isUpdating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="mr-2 h-4 w-4" />
-              )}
-              Save
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    )
   }
 
   return (
@@ -276,30 +127,20 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
           <p className="font-medium">{booking.customer_name}</p>
         </div>
 
-        <div className="flex gap-2 pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={handleStartEdit}
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-          
+        <div className="pt-2">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                className="w-full text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
                 {isCancelling ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Trash2 className="mr-2 h-4 w-4" />
                 )}
-                Cancel
+                Cancel Booking
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
