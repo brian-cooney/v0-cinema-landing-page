@@ -2,10 +2,11 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, MapPin, Ticket, Film } from "lucide-react"
+import { Calendar, MapPin, Ticket, Film } from "lucide-react"
 import Link from "next/link"
+import { BookingCard } from "@/components/booking-card"
 
 interface Showtime {
   id: string
@@ -63,9 +64,6 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
   
-  console.log("[v0] Dashboard - User ID:", user.id)
-  console.log("[v0] Dashboard - Bookings query result:", JSON.stringify({ bookings, error }, null, 2))
-
   const now = new Date()
   
   // Normalize bookings - handle both single object and array for showtimes relation
@@ -76,8 +74,6 @@ export default async function DashboardPage() {
       showtimes: Array.isArray(booking.showtimes) ? booking.showtimes[0] : booking.showtimes
     }))
     .filter(booking => booking.showtimes !== undefined) as Booking[]
-
-  console.log("[v0] Dashboard - Normalized bookings:", JSON.stringify(normalizedBookings, null, 2))
   
   // Separate upcoming and past bookings
   const upcomingBookings = normalizedBookings.filter(
@@ -140,48 +136,11 @@ export default async function DashboardPage() {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {upcomingBookings.map((booking) => (
-                  <Card key={booking.id} className="overflow-hidden">
-                    {booking.showtimes.image_url && (
-                      <div className="aspect-video w-full overflow-hidden">
-                        <img
-                          src={booking.showtimes.image_url}
-                          alt={booking.showtimes.movie_title}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <CardHeader>
-                      <CardTitle className="line-clamp-1">
-                        {booking.showtimes.movie_title}
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {booking.showtimes.movie_description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>{formatDate(booking.showtimes.showtime)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{formatTime(booking.showtimes.showtime)}</span>
-                        {booking.showtimes.running_time && (
-                          <span className="text-muted-foreground">
-                            ({booking.showtimes.running_time} min)
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>Seat {SEAT_LABELS[booking.seat_number - 1]}</span>
-                      </div>
-                      <div className="mt-4 rounded-md bg-primary/10 p-3 text-center">
-                        <p className="text-xs text-muted-foreground">Booked for</p>
-                        <p className="font-medium">{booking.customer_name}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <BookingCard 
+                    key={booking.id} 
+                    booking={booking} 
+                    seatLabels={SEAT_LABELS}
+                  />
                 ))}
               </div>
             )}

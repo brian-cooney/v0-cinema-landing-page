@@ -270,3 +270,158 @@ export async function getShowtimeBookings(showtimeId: string) {
 
   return { success: true, bookings: data }
 }
+
+// User booking management
+
+export async function cancelBooking(bookingId: string) {
+  const supabase = await createClient()
+
+  // Get the current user
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    return { error: "You must be logged in to cancel a booking" }
+  }
+
+  // Verify the booking belongs to this user
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, user_id, showtime_id")
+    .eq("id", bookingId)
+    .single()
+
+  if (!booking) {
+    return { error: "Booking not found" }
+  }
+
+  if (booking.user_id !== user.id) {
+    return { error: "You can only cancel your own bookings" }
+  }
+
+  // Check if the showtime is in the future
+  const { data: showtime } = await supabase
+    .from("showtimes")
+    .select("showtime")
+    .eq("id", booking.showtime_id)
+    .single()
+
+  if (showtime && new Date(showtime.showtime) <= new Date()) {
+    return { error: "Cannot cancel bookings for past screenings" }
+  }
+
+  // Delete the booking
+  const { error } = await supabase
+    .from("bookings")
+    .delete()
+    .eq("id", bookingId)
+
+  if (error) {
+    return { error: "Failed to cancel booking. Please try again." }
+  }
+
+  return { success: true }
+}
+
+interface UpdateBookingParams {
+  bookingId: string
+  customerName: string
+  seatNumber: number
+}
+
+export async function updateBooking({
+  bookingId,
+  customerName,
+  seatNumber,
+}: UpdateBookingParams) {
+  const supabase = await createClient()
+
+  // Get the current user
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    return { error: "You must be logged in to update a booking" }
+  }
+
+  // Verify the booking belongs to this user and get showtime_id
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("id, user_id, showtime_id, seat_number")
+    .eq("id", bookingId)
+    .single()
+
+  if (!booking) {
+    return { error: "Booking not found" }
+  }
+
+  if (booking.user_id !== user.id) {
+    return { error: "You can only update your own bookings" }
+  }
+
+  // Check if the showtime is in the future
+  const { data: showtime } = await supabase
+    .from("showtimes")
+    .select("showtime")
+    .eq("id", booking.showtime_id)
+    .single()
+
+  if (showtime && new Date(showtime.showtime) <= new Date()) {
+    return { error: "Cannot update bookings for past screenings" }
+  }
+
+  // Validate seat number
+  if (seatNumber < 1 || seatNumber > 6) {
+    return { error: "Invalid seat number" }
+  }
+
+  // If seat number changed, check if the new seat is available
+  if (seatNumber !== booking.seat_number) {
+    const { data: existingBooking } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("showtime_id", booking.showtime_id)
+      .eq("seat_number", seatNumber)
+      .maybeSingle()
+
+    if (existingBooking) {
+      return { error: "This seat has already been booked" }
+    }
+  }
+
+  // Update the booking
+  const { data, error } = await supabase
+    .from("bookings")
+    .update({
+      customer_name: customerName,
+      seat_number: seatNumber,
+    })
+    .eq("id", bookingId)
+    .select()
+    .single()
+
+  if (error) {
+    return { error: "Failed to update booking. Please try again." }
+  }
+
+  return { success: true, booking: data }
+}
+
+export async function getAvailableSeats(showtimeId: string, excludeBookingId?: string) {
+  const supabase = await createClient()
+
+  let query = supabase
+    .from("bookings")
+    .select("seat_number")
+    .eq("showtime_id", showtimeId)
+
+  if (excludeBookingId) {
+    query = query.neq("id", excludeBookingId)
+  }
+
+  const { data: bookings } = await query
+
+  const bookedSeats = bookings?.map(b => b.seat_number) || []
+  const allSeats = [1, 2, 3, 4, 5, 6]
+  const availableSeats = allSeats.filter(seat => !bookedSeats.includes(seat))
+
+  return { availableSeats, bookedSeats }
+}
