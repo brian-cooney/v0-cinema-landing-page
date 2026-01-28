@@ -21,29 +21,24 @@ function generateICSFile({
   seatNumber: number
   customerName: string
 }): string {
-  const startDate = new Date(showtime)
+  const startDate = new Date(showtime);
   // Assume movie duration of 2 hours
-  const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000)
-  
-  // Format dates for ICS in local time (YYYYMMDDTHHMMSS format)
-  const formatICSDateLocal = (date: Date): string => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    const seconds = String(date.getSeconds()).padStart(2, '0')
-    return `${year}${month}${day}T${hours}${minutes}${seconds}`
-  }
-  
-  // Format for DTSTAMP (must be UTC)
+  const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+
+  // Format for ICS in UTC (YYYYMMDDTHHMMSSZ)
   const formatICSDateUTC = (date: Date): string => {
-    return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
-  }
-  
-  const uid = `${startDate.getTime()}-${seatNumber}-${customerName.replace(/\s/g, '')}@embassycinema.com`
-  const now = formatICSDateUTC(new Date())
-  
+    return date.toISOString()
+      .replace(/[-:]/g, '')     // Remove - and :
+      .replace(/\.\d{3}/, '')    // Remove milliseconds
+      .replace('Z', '');         // We'll add Z manually at the end
+  };
+
+  const startUTC = formatICSDateUTC(startDate) + 'Z';
+  const endUTC   = formatICSDateUTC(endDate)   + 'Z';
+  const nowUTC   = formatICSDateUTC(new Date()) + 'Z';
+
+  const uid = `${startDate.getTime()}-${seatNumber}-${customerName.replace(/\s/g, '')}@embassycinema.com`;
+
   return `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Embassy Cinema//Booking System//EN
@@ -68,14 +63,13 @@ END:STANDARD
 END:VTIMEZONE
 BEGIN:VEVENT
 UID:${uid}
-DTSTAMP:${now}
-DTSTART;TZID=Europe/Rome:${formatICSDateLocal(startDate)}
-DTEND;TZID=Europe/Rome:${formatICSDateLocal(endDate)}
+DTSTAMP:${nowUTC}
+DTSTART:${startUTC}
+DTEND:${endUTC}
 SUMMARY:${movieTitle} at Embassy Cinema
 DESCRIPTION:Your booking confirmation for ${movieTitle}.\\n\\nSeat: ${seatNumber}\\nPlease arrive 10 minutes early. No ticket required - just give your name at the door.
 LOCATION:Embassy Cinema
 ORGANIZER;CN=Embassy Cinema:mailto:bookings@embassycinema.com
-ATTENDEE;CN=${customerName};RSVP=FALSE:mailto:${customerName}
 STATUS:CONFIRMED
 SEQUENCE:0
 BEGIN:VALARM
@@ -84,7 +78,7 @@ DESCRIPTION:Reminder: ${movieTitle} at Embassy Cinema in 1 hour
 TRIGGER:-PT1H
 END:VALARM
 END:VEVENT
-END:VCALENDAR`
+END:VCALENDAR`;
 }
 
 export async function sendBookingConfirmation({
