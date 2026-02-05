@@ -188,15 +188,13 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
 
   const handleSignIn = () => {
     // Create redirect URL with current showtime AND selected seat
-    const currentShowtimeParam = searchParams.get("showtime")
     const params = new URLSearchParams()
-    if (currentShowtimeParam) {
-      params.set("showtime", currentShowtimeParam)
-    }
+    // Use the showtimeId prop to ensure the correct film is pre-selected
+    params.set("showtime", showtimeId)
     if (selectedSeat) {
       params.set("seat", selectedSeat.toString())
     }
-    const redirectUrl = `/book${params.toString() ? `?${params.toString()}` : ''}`
+    const redirectUrl = `/book?${params.toString()}`
     router.push(`/auth/user-login?redirectTo=${encodeURIComponent(redirectUrl)}`)
   }
 
