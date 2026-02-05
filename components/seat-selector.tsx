@@ -154,6 +154,22 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Restore selected seat from URL params after authentication
+  useEffect(() => {
+    const seatParam = searchParams.get("seat")
+    if (seatParam && !selectedSeat) {
+      const seatNumber = parseInt(seatParam, 10)
+      if (seatNumber >= 1 && seatNumber <= 6) {
+        setSelectedSeat(seatNumber)
+        // Clean up the URL by removing the seat parameter
+        const newParams = new URLSearchParams(searchParams.toString())
+        newParams.delete("seat")
+        const newUrl = newParams.toString() ? `${pathname}?${newParams.toString()}` : pathname
+        router.replace(newUrl)
+      }
+    }
+  }, [searchParams, selectedSeat, pathname, router])
+
   const { data, isLoading } = useSWR<{ bookings: Booking[] }>(
     `/api/bookings?showtimeId=${showtimeId}`,
     fetcher,
@@ -171,11 +187,16 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
   }
 
   const handleSignIn = () => {
-    // Create redirect URL with current showtime selected
+    // Create redirect URL with current showtime AND selected seat
     const currentShowtimeParam = searchParams.get("showtime")
-    const redirectUrl = currentShowtimeParam 
-      ? `/book?showtime=${currentShowtimeParam}` 
-      : pathname
+    const params = new URLSearchParams()
+    if (currentShowtimeParam) {
+      params.set("showtime", currentShowtimeParam)
+    }
+    if (selectedSeat) {
+      params.set("seat", selectedSeat.toString())
+    }
+    const redirectUrl = `/book${params.toString() ? `?${params.toString()}` : ''}`
     router.push(`/auth/user-login?redirectTo=${encodeURIComponent(redirectUrl)}`)
   }
 
