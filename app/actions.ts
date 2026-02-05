@@ -33,9 +33,9 @@ export async function bookSeat({
     .eq("seat_number", seatNumber)
     .maybeSingle()
 
-  if (existingBooking) {
-    return { error: "This seat has already been booked" }
-  }
+    if (existingBooking) {
+      return { error: "This seat is unavailable. Please choose another seat." }
+    }
 
   // Get showtime details for the confirmation email
   const { data: showtimeData } = await supabase
@@ -200,7 +200,7 @@ export async function adminBookSeat({
     .maybeSingle()
 
   if (existingBooking) {
-    return { error: "This seat has already been booked" }
+    return { error: "This seat is unavailable. Please choose another seat." }
   }
 
   // Get showtime details for the confirmation email
@@ -382,9 +382,9 @@ export async function updateBooking({
       .eq("seat_number", seatNumber)
       .maybeSingle()
 
-    if (existingBooking) {
-      return { error: "This seat has already been booked" }
-    }
+  if (existingBooking) {
+    return { error: "This seat is unavailable. Please choose another seat." }
+  }
   }
 
   // Update the booking

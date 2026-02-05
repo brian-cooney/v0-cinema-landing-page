@@ -216,6 +216,11 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
 
       if (result.error) {
         setError(result.error)
+        // If seat was taken, refresh bookings and clear selection
+        if (result.error.toLowerCase().includes("already been booked")) {
+          setSelectedSeat(null)
+          mutate(`/api/bookings?showtimeId=${showtimeId}`)
+        }
       } else {
         setShowConfetti(true)
         setBookingSuccess(true)
