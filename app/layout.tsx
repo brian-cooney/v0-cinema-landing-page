@@ -13,6 +13,15 @@ export const metadata: Metadata = {
   description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films at Embassy Cinema. Free bookings available.',
   generator: 'v0.app',
   metadataBase: new URL('https://www.embassycinema.com'),
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
   openGraph: {
     title: 'Embassy Cinema | Intimate Film Experience',
     description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films. Free bookings available.',
