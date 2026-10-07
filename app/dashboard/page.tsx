@@ -6,7 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Calendar, MapPin, Ticket, Film } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { BookingCard } from "@/components/booking-card"
+import { ShowtimeCard } from "@/components/showtime-card"
+import { getUpcomingShowtimes } from "@/lib/showtimes"
 import { CINEMA_TIME_ZONE, SEAT_LABELS } from "@/lib/utils"
 
 interface Showtime {
@@ -83,6 +86,11 @@ export default async function DashboardPage() {
     booking => new Date(booking.showtimes.showtime) <= now
   )
 
+  // Screenings the guest hasn't booked yet, shown as poster cards
+  const otherScreenings = await getUpcomingShowtimes(supabase, {
+    excludeIds: upcomingBookings.map((booking) => booking.showtimes.id),
+  })
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", {
@@ -118,23 +126,41 @@ export default async function DashboardPage() {
 
           {/* Upcoming Bookings */}
           <section className="mb-12">
-            <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
-              <Ticket className="h-5 w-5 text-primary" />
-              Upcoming Screenings
-            </h2>
+            {upcomingBookings.length > 0 && (
+              <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
+                <Ticket className="h-5 w-5 text-primary" />
+                Your Upcoming Bookings
+              </h2>
+            )}
             
             {upcomingBookings.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Film className="mb-4 h-12 w-12 text-muted-foreground/50" />
-                  <p className="mb-4 text-center text-muted-foreground">
-                    You don&apos;t have any upcoming bookings.
+              <div className="relative overflow-hidden rounded-xl border border-border/50">
+                <Image
+                  src="/hero-cinema.webp"
+                  alt=""
+                  fill
+                  sizes="100vw"
+                  className="object-cover opacity-40"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+                <div className="relative flex flex-col items-center px-6 py-16 text-center md:py-20">
+                  <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-primary">
+                    Six seats · One screen · Always free
                   </p>
-                  <Button asChild>
-                    <Link href="/book">Browse Showtimes</Link>
+                  <h3 className="font-serif text-3xl font-semibold md:text-4xl">
+                    Your seat is waiting
+                  </h3>
+                  <p className="mt-3 max-w-md text-muted-foreground">
+                    You haven&apos;t booked a screening yet. Pick a film below and save
+                    your seat in under a minute.
+                  </p>
+                  <Button asChild size="lg" className="mt-8">
+                    <Link href={otherScreenings.length > 0 ? "#coming-up" : "/book"}>
+                      See what&apos;s on
+                    </Link>
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {upcomingBookings.map((booking) => (
@@ -147,6 +173,21 @@ export default async function DashboardPage() {
               </div>
             )}
           </section>
+
+          {/* Screenings they haven't booked */}
+          {otherScreenings.length > 0 && (
+            <section id="coming-up" className="mb-12 scroll-mt-24">
+              <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
+                <Film className="h-5 w-5 text-primary" />
+                {upcomingBookings.length === 0 ? "Coming Up" : "More Screenings"}
+              </h2>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {otherScreenings.map((showtime) => (
+                  <ShowtimeCard key={showtime.id} showtime={showtime} />
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Past Bookings */}
           {pastBookings.length > 0 && (
