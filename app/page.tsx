@@ -1,18 +1,18 @@
 import { Header } from "@/components/header"
 import { Hero } from "@/components/hero"
+import { Ticker } from "@/components/ticker"
+import { Programme } from "@/components/programme"
 import { Features } from "@/components/features"
 import { FeaturedIn } from "@/components/featured-in"
-import { UpcomingShowtimes } from "@/components/upcoming-showtimes"
-import { PastScreenings } from "@/components/past-screenings"
 import { Footer } from "@/components/footer"
 
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <Header />
+      <Header variant="overlay" />
       <Hero />
-      <UpcomingShowtimes />
-      <PastScreenings />
+      <Ticker />
+      <Programme />
       <Features />
       <FeaturedIn />
       <Footer />

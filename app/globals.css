@@ -4,80 +4,53 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.13 0.01 260);
-  --foreground: oklch(0.95 0.01 90);
-  --card: oklch(0.18 0.01 260);
-  --card-foreground: oklch(0.95 0.01 90);
-  --popover: oklch(0.18 0.01 260);
-  --popover-foreground: oklch(0.95 0.01 90);
-  --primary: oklch(0.78 0.12 85);
-  --primary-foreground: oklch(0.13 0.01 260);
-  --secondary: oklch(0.22 0.01 260);
-  --secondary-foreground: oklch(0.95 0.01 90);
-  --muted: oklch(0.22 0.01 260);
-  --muted-foreground: oklch(0.65 0.02 90);
-  --accent: oklch(0.78 0.12 85);
-  --accent-foreground: oklch(0.13 0.01 260);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.95 0.01 90);
-  --border: oklch(0.28 0.01 260);
-  --input: oklch(0.22 0.01 260);
-  --ring: oklch(0.78 0.12 85);
-  --chart-1: oklch(0.78 0.12 85);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.5rem;
-  --sidebar: oklch(0.18 0.01 260);
-  --sidebar-foreground: oklch(0.95 0.01 90);
-  --sidebar-primary: oklch(0.78 0.12 85);
-  --sidebar-primary-foreground: oklch(0.13 0.01 260);
-  --sidebar-accent: oklch(0.22 0.01 260);
-  --sidebar-accent-foreground: oklch(0.95 0.01 90);
-  --sidebar-border: oklch(0.28 0.01 260);
-  --sidebar-ring: oklch(0.78 0.12 85);
-}
-
-.dark {
-  --background: oklch(0.13 0.01 260);
-  --foreground: oklch(0.95 0.01 90);
-  --card: oklch(0.18 0.01 260);
-  --card-foreground: oklch(0.95 0.01 90);
-  --popover: oklch(0.18 0.01 260);
-  --popover-foreground: oklch(0.95 0.01 90);
-  --primary: oklch(0.78 0.12 85);
-  --primary-foreground: oklch(0.13 0.01 260);
-  --secondary: oklch(0.22 0.01 260);
-  --secondary-foreground: oklch(0.95 0.01 90);
-  --muted: oklch(0.22 0.01 260);
-  --muted-foreground: oklch(0.65 0.02 90);
-  --accent: oklch(0.78 0.12 85);
-  --accent-foreground: oklch(0.13 0.01 260);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.95 0.01 90);
-  --border: oklch(0.28 0.01 260);
-  --input: oklch(0.22 0.01 260);
-  --ring: oklch(0.78 0.12 85);
-  --chart-1: oklch(0.78 0.12 85);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.18 0.01 260);
-  --sidebar-foreground: oklch(0.95 0.01 90);
-  --sidebar-primary: oklch(0.78 0.12 85);
-  --sidebar-primary-foreground: oklch(0.13 0.01 260);
-  --sidebar-accent: oklch(0.22 0.01 260);
-  --sidebar-accent-foreground: oklch(0.95 0.01 90);
-  --sidebar-border: oklch(0.28 0.01 260);
-  --sidebar-ring: oklch(0.78 0.12 85);
+  /* Zine look: black on white, square corners, flat colour blocks.
+     Yellow / cyan / pink are used as backgrounds (see --color-brand-*),
+     never as text on white, so "primary" stays black for legibility. */
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f4;
+  --secondary-foreground: #000000;
+  --muted: #f0f0f0;
+  --muted-foreground: #4a4a4a;
+  --accent: #fcd450;
+  --accent-foreground: #000000;
+  --destructive: #d92d20;
+  --destructive-foreground: #ffffff;
+  --border: #000000;
+  --input: #000000;
+  --ring: #000000;
+  --chart-1: #fcd450;
+  --chart-2: #48bdd8;
+  --chart-3: #f781be;
+  --chart-4: #000000;
+  --chart-5: #4a4a4a;
+  --radius: 0rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #000000;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fcd450;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #000000;
+  --sidebar-ring: #000000;
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-serif: 'Playfair Display', 'Georgia', serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  /* Headings that used the old serif now use the display grotesk */
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-serif: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --font-logo: var(--font-playfair), Georgia, serif;
+  --color-brand-yellow: #fcd450;
+  --color-brand-cyan: #48bdd8;
+  --color-brand-pink: #f781be;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

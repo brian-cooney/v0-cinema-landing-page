@@ -192,9 +192,9 @@ const logoComponents = [
 
 export function FeaturedIn() {
   return (
-    <section className="border-t border-border/50 bg-background py-16 overflow-hidden">
+    <section className="overflow-hidden border-t-2 border-black bg-white py-12">
       <div className="mx-auto max-w-6xl px-4">
-        <p className="mb-10 text-center text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="mb-8 text-center font-mono text-sm font-bold uppercase">
           As Featured In
         </p>
       </div>
@@ -205,7 +205,7 @@ export function FeaturedIn() {
         <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-background to-transparent" />
 
         {/* Marquee container */}
-        <div className="flex animate-marquee">
+        <div className="flex animate-marquee motion-reduce:animate-none">
           {/* First set of logos */}
           <div className="flex shrink-0 items-center gap-16 px-8">
             {logoComponents.map(({ Component, name, width }) => (
@@ -214,7 +214,7 @@ export function FeaturedIn() {
                 className="flex shrink-0 items-center justify-center"
                 style={{ width: width * 0.6 }}
               >
-                <Component className="h-8 w-full text-muted-foreground/60" />
+                <Component className="h-8 w-full text-black" />
                 <span className="sr-only">{name}</span>
               </div>
             ))}
@@ -228,7 +228,7 @@ export function FeaturedIn() {
                 className="flex shrink-0 items-center justify-center"
                 style={{ width: width * 0.6 }}
               >
-                <Component className="h-8 w-full text-muted-foreground/60" />
+                <Component className="h-8 w-full text-black" />
                 <span className="sr-only">{name}</span>
               </div>
             ))}

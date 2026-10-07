@@ -1,26 +1,20 @@
-import { Armchair, Sparkles, Volume2, Heart } from "lucide-react"
-
 const features = [
   {
-    icon: Armchair,
     title: "Intimate Setting",
     description:
       "Just 6 carefully arranged seats ensure an exclusive, personal viewing experience for every guest.",
   },
   {
-    icon: Sparkles,
     title: "Curated Selection",
     description:
       "From timeless classics to hidden gems, our programming celebrates the art of cinema.",
   },
   {
-    icon: Volume2,
     title: "Premium Sound",
     description:
       "Crystal-clear audio designed for a small space—hear every whisper and score note.",
   },
   {
-    icon: Heart,
     title: "Always Free",
     description:
       "We believe great cinema should be accessible to everyone. No tickets, just pure enjoyment.",
@@ -29,35 +23,20 @@ const features = [
 
 export function Features() {
   return (
-    <section id="about" className="border-t border-border/50 bg-card/50 py-24">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="mb-16 text-center">
-          <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-primary">
-            The Experience
-          </p>
-          <h2 className="font-serif text-3xl font-semibold md:text-4xl">
-            Why Embassy Cinema
-          </h2>
-        </div>
-
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="group rounded-lg border border-border/50 bg-card p-6 transition-all hover:border-primary/30"
-            >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <feature.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mb-2 font-serif text-lg font-medium">
-                {feature.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {feature.description}
-              </p>
-            </div>
-          ))}
-        </div>
+    <section id="about" className="scroll-mt-24 border-t-2 border-black bg-brand-pink px-4 py-16 sm:px-6">
+      <h2 className="mb-10 text-center text-4xl font-semibold uppercase leading-none tracking-tight sm:text-5xl">
+        Why Embassy <span aria-hidden="true">↓</span>
+      </h2>
+      <div className="mx-auto grid max-w-6xl border-l-2 border-t-2 border-black sm:grid-cols-2 lg:grid-cols-4">
+        {features.map((feature, index) => (
+          <div key={feature.title} className="border-b-2 border-r-2 border-black p-6">
+            <p className="font-mono text-sm font-bold">{String(index + 1).padStart(2, "0")}</p>
+            <h3 className="mt-6 text-2xl font-semibold uppercase leading-none tracking-tight">
+              {feature.title}
+            </h3>
+            <p className="mt-3 font-mono text-sm leading-relaxed">{feature.description}</p>
+          </div>
+        ))}
       </div>
     </section>
   )
