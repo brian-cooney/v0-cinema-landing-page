@@ -8,6 +8,7 @@ import Image from "next/image"
 import { Calendar, Clock, Edit2, Trash2, X, Check, Upload, ImageIcon, Users, Plus, ChevronDown, ChevronUp, Timer } from "lucide-react"
 import { formatRunningTime, romeTimeToISO } from "@/lib/utils"
 import { DatePicker } from "@/components/date-picker"
+import { TimePicker } from "@/components/time-picker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -327,12 +328,9 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
                       onChange={(date) => setEditForm({ ...editForm, date })}
                       className="bg-background"
                     />
-                    <Input
-                      type="time"
+                    <TimePicker
                       value={editForm.time}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, time: e.target.value })
-                      }
+                      onChange={(time) => setEditForm({ ...editForm, time })}
                       className="bg-background"
                     />
                     <Input
