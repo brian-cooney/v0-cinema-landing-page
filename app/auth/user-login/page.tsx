@@ -34,9 +34,9 @@ function UserLoginContent() {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+          // The email template appends &token_hash=...&type=email to this URL
+          // (see app/auth/confirm/route.ts)
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectTo)}`,
         },
       })
       if (error) throw error
