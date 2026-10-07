@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createShowtime } from "@/app/actions"
 import { romeTimeToISO } from "@/lib/utils"
+import { DatePicker } from "@/components/date-picker"
+import { startOfToday } from "date-fns"
 
 export function AddShowtimeForm() {
   const router = useRouter()
@@ -23,6 +25,7 @@ export function AddShowtimeForm() {
   const [success, setSuccess] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [date, setDate] = useState("")
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -79,7 +82,6 @@ export function AddShowtimeForm() {
     const formData = new FormData(e.currentTarget)
     const movieTitle = formData.get("movieTitle") as string
     const movieDescription = formData.get("movieDescription") as string
-    const date = formData.get("date") as string
     const time = formData.get("time") as string
     const runningTimeStr = formData.get("runningTime") as string
     const runningTime = runningTimeStr ? parseInt(runningTimeStr, 10) : null
@@ -108,6 +110,7 @@ export function AddShowtimeForm() {
       ;(e.target as HTMLFormElement).reset()
       setImageUrl(null)
       setImagePreview(null)
+      setDate("")
       router.refresh()
     }
 
@@ -212,12 +215,12 @@ export function AddShowtimeForm() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="date">Date</Label>
-              <Input
+              <DatePicker
                 id="date"
-                name="date"
-                type="date"
+                value={date}
+                onChange={setDate}
+                disabled={{ before: startOfToday() }}
                 className="bg-secondary/50"
-                required
               />
             </div>
             <div className="space-y-2">

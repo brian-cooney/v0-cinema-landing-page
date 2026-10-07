@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Calendar, Clock, Edit2, Trash2, X, Check, Upload, ImageIcon, Users, Plus, ChevronDown, ChevronUp, Timer } from "lucide-react"
 import { formatRunningTime, romeTimeToISO } from "@/lib/utils"
+import { DatePicker } from "@/components/date-picker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -321,12 +322,9 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
                     className="min-h-20 bg-background"
                   />
                   <div className="grid gap-4 sm:grid-cols-3">
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={editForm.date}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, date: e.target.value })
-                      }
+                      onChange={(date) => setEditForm({ ...editForm, date })}
                       className="bg-background"
                     />
                     <Input
