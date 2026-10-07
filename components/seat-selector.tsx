@@ -3,11 +3,13 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import useSWR, { mutate } from "swr"
-import { CheckCircle2, Loader2, Mail } from "lucide-react"
+import { Check, CheckCircle2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { bookSeat } from "@/app/actions"
+import { EmailCodeSignIn } from "@/components/email-code-sign-in"
+import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 
@@ -133,6 +135,8 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const bookingPanelRef = useRef<HTMLDivElement>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
   // Check authentication status
   useEffect(() => {
@@ -186,17 +190,22 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
     return firstName.length > 6 ? firstName.slice(0, 5) + "..." : firstName
   }
 
-  const handleSignIn = () => {
-    // Create redirect URL with current showtime AND selected seat
-    const params = new URLSearchParams()
-    // Use the showtimeId prop to ensure the correct film is pre-selected
-    params.set("showtime", showtimeId)
-    if (selectedSeat) {
-      params.set("seat", selectedSeat.toString())
+  // Where the emailed sign-in link should bring the guest back to
+  const bookingPath = `/book?showtime=${showtimeId}${selectedSeat ? `&seat=${selectedSeat}` : ""}`
+
+  // Bring the booking panel into view as soon as a seat is picked, so the
+  // next step isn't hidden below the fold
+  useEffect(() => {
+    if (!selectedSeat) return
+    bookingPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+  }, [selectedSeat])
+
+  // Once signed in, the only thing left is the name: put the cursor there
+  useEffect(() => {
+    if (selectedSeat && user) {
+      nameInputRef.current?.focus({ preventScroll: true })
     }
-    const redirectUrl = `/book?${params.toString()}`
-    router.push(`/auth/user-login?redirectTo=${encodeURIComponent(redirectUrl)}`)
-  }
+  }, [selectedSeat, user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -362,75 +371,98 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
         </div>
       </div>
 
-      {/* Booking Form */}
+      {/* Booking panel */}
       {selectedSeat && (
-        <div className="space-y-6">
-          <div className="rounded-lg border border-primary/30 bg-card p-6">
-            <p className="mb-4 text-center text-sm text-muted-foreground">
-              Selected seat:{" "}
-              <span className="font-semibold text-primary">
-                {SEAT_LABELS[selectedSeat - 1]}
-              </span>
-            </p>
+        <div
+          ref={bookingPanelRef}
+          className="mx-auto w-full max-w-md scroll-mt-24 rounded-lg border border-primary/40 bg-card p-6 shadow-lg"
+        >
+          <h3 className="font-serif text-xl font-semibold">Complete your booking</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Seat{" "}
+            <span className="font-semibold text-primary">{SEAT_LABELS[selectedSeat - 1]}</span>
+            {" "}· free admission
+          </p>
 
-            {isCheckingAuth ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : !user ? (
-              <div className="space-y-4 text-center">
+          <ol className="mt-6 space-y-6">
+            <BookingStep number={1} title="Verify your email" done={!!user}>
+              {isCheckingAuth ? (
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              ) : user ? (
                 <p className="text-sm text-muted-foreground">
-                  Sign in to complete your booking
+                  Signed in as <span className="font-medium text-foreground">{user.email}</span>
                 </p>
-                <Button onClick={handleSignIn} className="w-full">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Sign In with Email
-                </Button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="rounded-md bg-secondary/50 p-3">
-                  <p className="text-xs text-muted-foreground">Signed in as</p>
-                  <p className="text-sm font-medium">{user.email}</p>
-                </div>
+              ) : (
+                <EmailCodeSignIn redirectTo={bookingPath} onSignedIn={() => router.refresh()} />
+              )}
+            </BookingStep>
 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Your Name</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Enter your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
+            <BookingStep number={2} title="Confirm your seat" disabled={!user}>
+              {user && (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Your name</Label>
+                    <Input
+                      ref={nameInputRef}
+                      id="name"
+                      type="text"
+                      autoComplete="name"
+                      placeholder="Enter your name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      We&apos;ll give this name at the door. No ticket needed.
+                    </p>
+                  </div>
 
-                {error && (
-                  <p className="text-center text-sm text-destructive">
-                    {error}
-                  </p>
-                )}
+                  {error && <p className="text-sm text-destructive">{error}</p>}
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isSubmitting || !name.trim()}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Booking...
-                    </>
-                  ) : (
-                    "Confirm Booking"
-                  )}
-                </Button>
-              </form>
-            )}
-          </div>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full"
+                    disabled={isSubmitting || !name.trim()}
+                  >
+                    {isSubmitting && <Loader2 className="animate-spin" />}
+                    {isSubmitting
+                      ? "Booking..."
+                      : `Confirm seat ${SEAT_LABELS[selectedSeat - 1]}`}
+                  </Button>
+                </form>
+              )}
+            </BookingStep>
+          </ol>
         </div>
       )}
     </div>
+  )
+}
+
+interface BookingStepProps {
+  number: number
+  title: string
+  done?: boolean
+  disabled?: boolean
+  children?: React.ReactNode
+}
+
+function BookingStep({ number, title, done, disabled, children }: BookingStepProps) {
+  return (
+    <li className={cn("flex gap-4", disabled && "opacity-50")}>
+      <span
+        className={cn(
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-sm font-medium",
+          done ? "border-primary bg-primary text-primary-foreground" : "border-primary/50 text-primary",
+        )}
+      >
+        {done ? <Check className="h-4 w-4" /> : number}
+      </span>
+      <div className="min-w-0 flex-1 space-y-3">
+        <p className="pt-0.5 font-medium">{title}</p>
+        {children}
+      </div>
+    </li>
   )
 }

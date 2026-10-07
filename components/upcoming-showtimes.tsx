@@ -1,9 +1,9 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Calendar, Clock, Film, Users, Timer } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/server"
-import { formatRunningTime } from "@/lib/utils"
+import { cn, formatRunningTime } from "@/lib/utils"
 
 const TOTAL_SEATS = 6
 
@@ -77,11 +77,10 @@ export async function UpcomingShowtimes() {
               const seatsRemaining = TOTAL_SEATS - bookedCount
               const isSoldOut = seatsRemaining <= 0
 
-              return (
-              <div
-                key={showtime.id}
-                className="group flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden transition-all hover:border-primary/30"
-              >
+              const cardClassName =
+                "group flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden transition-all"
+              const cardContent = (
+              <>
                 {showtime.image_url ? (
                   <div className="relative aspect-[16/9] w-full overflow-hidden">
                     <Image
@@ -129,23 +128,37 @@ export async function UpcomingShowtimes() {
                       </span>
                     )}
                   </div>
-                  <Button 
-                    asChild={!isSoldOut} 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full bg-transparent"
-                    disabled={isSoldOut}
+                  {/* The whole card is the link, so this only looks like a button */}
+                  <span
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      "w-full bg-transparent",
+                      isSoldOut
+                        ? "opacity-50"
+                        : "group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground",
+                    )}
                   >
-                    {isSoldOut ? (
-                      <span>Sold Out</span>
-                    ) : (
-                      <Link href={`/book?showtime=${showtime.id}`}>
-                        Reserve Seats
-                      </Link>
-)}
-                  </Button>
+                    {isSoldOut ? "Sold Out" : "Reserve Seats"}
+                  </span>
                 </div>
-              </div>
+              </>
+              )
+
+              return isSoldOut ? (
+                <div key={showtime.id} className={cardClassName}>
+                  {cardContent}
+                </div>
+              ) : (
+                <Link
+                  key={showtime.id}
+                  href={`/book?showtime=${showtime.id}`}
+                  className={cn(
+                    cardClassName,
+                    "hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  )}
+                >
+                  {cardContent}
+                </Link>
               )
             })}
           </div>
