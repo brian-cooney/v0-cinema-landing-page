@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createShowtime } from "@/app/actions"
 import { romeTimeToISO } from "@/lib/utils"
+import { DatePicker } from "@/components/date-picker"
+import { TimePicker } from "@/components/time-picker"
 
 export function AddPastScreeningForm() {
   const router = useRouter()
@@ -23,6 +25,8 @@ export function AddPastScreeningForm() {
   const [success, setSuccess] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [date, setDate] = useState("")
+  const [time, setTime] = useState("")
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -79,8 +83,6 @@ export function AddPastScreeningForm() {
     const formData = new FormData(e.currentTarget)
     const movieTitle = formData.get("movieTitle") as string
     const movieDescription = formData.get("movieDescription") as string
-    const date = formData.get("date") as string
-    const time = formData.get("time") as string
     const runningTimeStr = formData.get("runningTime") as string
     const runningTime = runningTimeStr ? parseInt(runningTimeStr, 10) : null
 
@@ -117,17 +119,12 @@ export function AddPastScreeningForm() {
       ;(e.target as HTMLFormElement).reset()
       setImageUrl(null)
       setImagePreview(null)
+      setDate("")
+      setTime("")
       router.refresh()
     }
 
     setIsSubmitting(false)
-  }
-
-  // Get yesterday's date as the max date for the date input
-  const getMaxDate = () => {
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    return yesterday.toISOString().split("T")[0]
   }
 
   return (
@@ -228,23 +225,21 @@ export function AddPastScreeningForm() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="pastDate">Date Screened</Label>
-              <Input
+              <DatePicker
                 id="pastDate"
-                name="date"
-                type="date"
-                max={getMaxDate()}
+                value={date}
+                onChange={setDate}
+                disabled={{ after: new Date() }}
                 className="bg-secondary/50"
-                required
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="pastTime">Time</Label>
-              <Input
+              <TimePicker
                 id="pastTime"
-                name="time"
-                type="time"
+                value={time}
+                onChange={setTime}
                 className="bg-secondary/50"
-                required
               />
             </div>
           </div>

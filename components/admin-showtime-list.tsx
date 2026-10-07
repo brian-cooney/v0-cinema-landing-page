@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Calendar, Clock, Edit2, Trash2, X, Check, Upload, ImageIcon, Users, Plus, ChevronDown, ChevronUp, Timer } from "lucide-react"
 import { formatRunningTime, romeTimeToISO } from "@/lib/utils"
+import { DatePicker } from "@/components/date-picker"
+import { TimePicker } from "@/components/time-picker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -90,10 +92,10 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
+    return date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
       minute: "2-digit",
-      hour12: true,
+      hour12: false,
       timeZone: "Europe/Rome",
     })
   }
@@ -321,20 +323,14 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
                     className="min-h-20 bg-background"
                   />
                   <div className="grid gap-4 sm:grid-cols-3">
-                    <Input
-                      type="date"
+                    <DatePicker
                       value={editForm.date}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, date: e.target.value })
-                      }
+                      onChange={(date) => setEditForm({ ...editForm, date })}
                       className="bg-background"
                     />
-                    <Input
-                      type="time"
+                    <TimePicker
                       value={editForm.time}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, time: e.target.value })
-                      }
+                      onChange={(time) => setEditForm({ ...editForm, time })}
                       className="bg-background"
                     />
                     <Input

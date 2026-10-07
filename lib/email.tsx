@@ -97,10 +97,10 @@ export async function sendBookingConfirmation({
     timeZone: "Europe/Rome",
   })
   const formattedDate = formatter.format(date)
-  const formattedTime = date.toLocaleTimeString("en-US", {
-    hour: "numeric",
+  const formattedTime = date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
+    hour12: false,
     timeZone: "Europe/Rome",
   })
   

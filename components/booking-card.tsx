@@ -59,10 +59,10 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
+    return date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
       minute: "2-digit",
-      hour12: true,
+      hour12: false,
       timeZone: CINEMA_TIME_ZONE,
     })
   }
