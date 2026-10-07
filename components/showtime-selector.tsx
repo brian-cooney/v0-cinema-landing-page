@@ -75,7 +75,7 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
   if (selectedShowtime) {
     return (
       <div className="space-y-8">
-        <div className="rounded-lg border border-border/50 bg-card overflow-hidden">
+        <div className="overflow-hidden border-2 border-black bg-white shadow-[6px_6px_0_0_#000]">
           <div className="flex flex-col sm:flex-row">
             {selectedShowtime.image_url ? (
               <div className="relative aspect-[16/9] sm:aspect-auto sm:h-48 sm:w-32 shrink-0">
@@ -93,14 +93,14 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
             )}
             <div className="flex flex-1 items-start justify-between gap-4 p-6">
               <div>
-                <p className="mb-1 text-sm font-medium text-primary">Selected</p>
-                <h3 className="font-serif text-2xl font-medium">
+                <p className="mb-2 w-fit bg-black px-2 py-0.5 font-mono text-xs font-bold uppercase text-white">Your film</p>
+                <h3 className="text-3xl font-semibold uppercase leading-none tracking-tight">
                   {selectedShowtime.movie_title}
                 </h3>
                 <p className="mt-2 text-muted-foreground">
                   {selectedShowtime.movie_description}
                 </p>
-                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-sm font-bold uppercase">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="h-4 w-4 text-primary" />
                     {formatDate(selectedShowtime.showtime)}
@@ -120,6 +120,7 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
               <Button
                 variant="outline"
                 size="sm"
+                className="border-2 font-mono font-bold uppercase hover:bg-brand-yellow"
                 onClick={() => setSelectedShowtime(null)}
               >
                 Change
@@ -128,6 +129,9 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
           </div>
         </div>
 
+        <h2 className="text-center text-4xl font-semibold uppercase leading-none tracking-tight sm:text-5xl">
+          Pick your seat <span aria-hidden="true">↓</span>
+        </h2>
         <SeatSelector showtimeId={selectedShowtime.id} />
       </div>
     )
@@ -135,9 +139,9 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
 
   if (showtimes.length === 0) {
     return (
-      <div className="rounded-lg border border-border/50 bg-card p-12 text-center">
+      <div className="border-2 border-black bg-white p-12 text-center shadow-[6px_6px_0_0_#000]">
         <Film className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 className="font-serif text-xl font-medium">No Upcoming Shows</h3>
+        <h3 className="text-3xl font-semibold uppercase leading-none tracking-tight">No upcoming shows</h3>
         <p className="mt-2 text-muted-foreground">
           Check back soon for new screenings!
         </p>
@@ -149,16 +153,16 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
     <div className="space-y-8">
       {Object.entries(groupedShowtimes).map(([date, dateShowtimes]) => (
         <div key={date}>
-          <h3 className="mb-4 flex items-center gap-2 font-serif text-lg font-medium">
-            <Calendar className="h-4 w-4 text-primary" />
+          <h2 className="mb-4 inline-flex items-center gap-2 bg-black px-3 py-1.5 font-mono text-sm font-bold uppercase text-white">
+            <Calendar className="h-4 w-4" />
             {formatDate(dateShowtimes[0].showtime)}
-          </h3>
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {dateShowtimes.map((showtime) => (
               <button
                 key={showtime.id}
                 onClick={() => setSelectedShowtime(showtime)}
-                className="group flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden text-left transition-all hover:border-primary/50 hover:bg-card/80"
+                className="group flex flex-col overflow-hidden border-2 border-black bg-white text-left transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
               >
                 {showtime.image_url ? (
                   <div className="relative aspect-[16/9] w-full overflow-hidden">
@@ -175,13 +179,13 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
                   </div>
                 )}
                 <div className="flex flex-1 flex-col p-5">
-                  <h4 className="font-serif text-lg font-medium group-hover:text-primary">
+                  <h4 className="text-2xl font-semibold uppercase leading-none tracking-tight">
                     {showtime.movie_title}
                   </h4>
                   <p className="mt-1 line-clamp-2 flex-1 text-sm text-muted-foreground">
                     {showtime.movie_description}
                   </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-sm font-bold uppercase">
                     <span className="flex items-center gap-1.5">
                       <Clock className="h-4 w-4 text-primary" />
                       {formatTime(showtime.showtime)}

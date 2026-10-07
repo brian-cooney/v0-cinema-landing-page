@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { Film, AlertCircle } from "lucide-react"
+import { Logo } from "@/components/logo"
+import { AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -11,21 +12,15 @@ import {
 
 export default function AuthErrorPage() {
   return (
-    <div className="flex min-h-svh w-full flex-col items-center justify-center bg-background p-6">
-      <Link
-        href="/"
-        className="mb-8 flex items-center gap-2 font-serif text-2xl font-medium"
-      >
-        <Film className="h-6 w-6 text-primary" />
-        Embassy Cinema
-      </Link>
+    <div className="flex min-h-svh w-full flex-col items-center justify-center bg-brand-cyan p-6">
+      <Logo className="mb-8" />
       <div className="w-full max-w-sm">
-        <Card className="border-border/50 bg-card">
+        <Card className="border-2 border-black bg-white shadow-[6px_6px_0_0_#000]">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
               <AlertCircle className="h-8 w-8 text-destructive" />
             </div>
-            <CardTitle className="font-serif text-2xl">Authentication Error</CardTitle>
+            <CardTitle className="text-3xl font-semibold uppercase leading-none tracking-tight">Authentication Error</CardTitle>
             <CardDescription className="mt-2">
               Something went wrong during sign in. The link may have expired or already been used.
             </CardDescription>

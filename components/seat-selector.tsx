@@ -264,10 +264,10 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
     return (
       <>
         <PopcornConfetti show={showConfetti} />
-        <div className="rounded-lg border border-primary/30 bg-card p-8 text-center">
-        <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-primary" />
-        <h3 className="font-serif text-2xl font-semibold">
-          Booking Confirmed!
+        <div className="mx-auto max-w-md border-2 border-black bg-white p-8 text-center shadow-[6px_6px_0_0_#000]">
+        <CheckCircle2 className="mx-auto mb-4 h-16 w-16" />
+        <h3 className="text-3xl font-semibold uppercase leading-none tracking-tight">
+          You&apos;re booked!
         </h3>
         <p className="mt-2 text-muted-foreground">
           Your seat {SEAT_LABELS[selectedSeat! - 1]} has been reserved. A
@@ -300,22 +300,18 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
   return (
     <div className="space-y-8">
       {/* Screen */}
-      <div className="text-center">
-        <div className="mx-auto mb-2 h-2 w-48 rounded-full bg-primary/30" />
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">
-          Screen
-        </p>
+      <div className="mx-auto max-w-xs bg-black py-1.5 text-center font-mono text-xs font-bold uppercase tracking-[0.3em] text-white">
+        Screen
       </div>
 
-      {/* Seats */}
-      <div className="flex flex-col items-center gap-4 py-8">
+      {/* Seats: two rows of three */}
+      <div className="flex flex-col items-center gap-3 py-4 sm:gap-4">
         {isLoading ? (
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin" />
         ) : (
-          <>
-            {/* Row A (seats 1-3) */}
-            <div className="flex gap-4">
-              {[1, 2, 3].map((seatNum) => {
+          [[1, 2, 3], [4, 5, 6]].map((row) => (
+            <div key={row[0]} className="flex gap-3 sm:gap-4">
+              {row.map((seatNum) => {
                 const isBooked = bookedSeats.has(seatNum)
                 const isSelected = selectedSeat === seatNum
                 return (
@@ -323,20 +319,20 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
                     key={seatNum}
                     disabled={isBooked}
                     onClick={() => setSelectedSeat(seatNum)}
-                    className={`flex h-16 w-16 flex-col items-center justify-center rounded-lg border-2 transition-all ${
+                    aria-pressed={isSelected}
+                    className={cn(
+                      "flex h-20 w-20 flex-col items-center justify-center border-2 border-black transition-all",
                       isBooked
-                        ? "cursor-not-allowed border-border bg-muted text-muted-foreground"
+                        ? "cursor-not-allowed bg-brand-pink"
                         : isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-foreground hover:border-primary/50"
-                    }`}
+                          ? "bg-black text-white shadow-[4px_4px_0_0_#000]"
+                          : "bg-white hover:-translate-y-0.5 hover:bg-brand-cyan",
+                    )}
                     aria-label={`Seat ${SEAT_LABELS[seatNum - 1]}${isBooked ? ` (booked by ${bookingsMap.get(seatNum)})` : ""}`}
                   >
-                    <span className="text-sm font-medium">
-                      {SEAT_LABELS[seatNum - 1]}
-                    </span>
+                    <span className="text-lg font-semibold">{SEAT_LABELS[seatNum - 1]}</span>
                     {isBooked && (
-                      <span className="text-[10px] truncate max-w-full px-1">
+                      <span className="max-w-full truncate px-1 font-mono text-[10px] font-bold uppercase">
                         {getFirstName(bookingsMap.get(seatNum) || "")}
                       </span>
                     )}
@@ -344,65 +340,31 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
                 )
               })}
             </div>
-
-            {/* Row B (seats 4-6) */}
-            <div className="flex gap-4">
-              {[4, 5, 6].map((seatNum) => {
-                const isBooked = bookedSeats.has(seatNum)
-                const isSelected = selectedSeat === seatNum
-                return (
-                  <button
-                    key={seatNum}
-                    disabled={isBooked}
-                    onClick={() => setSelectedSeat(seatNum)}
-                    className={`flex h-16 w-16 flex-col items-center justify-center rounded-lg border-2 transition-all ${
-                      isBooked
-                        ? "cursor-not-allowed border-border bg-muted text-muted-foreground"
-                        : isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-foreground hover:border-primary/50"
-                    }`}
-                    aria-label={`Seat ${SEAT_LABELS[seatNum - 1]}${isBooked ? ` (booked by ${bookingsMap.get(seatNum)})` : ""}`}
-                  >
-                    <span className="text-sm font-medium">
-                      {SEAT_LABELS[seatNum - 1]}
-                    </span>
-                    {isBooked && (
-                      <span className="text-[10px] truncate max-w-full px-1">
-                        {getFirstName(bookingsMap.get(seatNum) || "")}
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </>
+          ))
         )}
       </div>
 
       {/* Legend */}
-      <div className="flex justify-center gap-6 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded border-2 border-border bg-card" />
-          <span className="text-muted-foreground">Available</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded border-2 border-primary bg-primary" />
-          <span className="text-muted-foreground">Selected</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded border-2 border-border bg-muted" />
-          <span className="text-muted-foreground">Taken</span>
-        </div>
+      <div className="flex justify-center gap-5 font-mono text-xs font-bold uppercase">
+        {[
+          { label: "Available", swatch: "bg-white" },
+          { label: "Your pick", swatch: "bg-black" },
+          { label: "Taken", swatch: "bg-brand-pink" },
+        ].map(({ label, swatch }) => (
+          <span key={label} className="flex items-center gap-2">
+            <span className={cn("h-4 w-4 border-2 border-black", swatch)} />
+            {label}
+          </span>
+        ))}
       </div>
 
       {/* Booking panel */}
       {selectedSeat && (
         <div
           ref={bookingPanelRef}
-          className="mx-auto w-full max-w-md scroll-mt-24 rounded-lg border border-primary/40 bg-card p-6 shadow-lg"
+          className="mx-auto w-full max-w-md scroll-mt-28 border-2 border-black bg-white p-6 shadow-[6px_6px_0_0_#000]"
         >
-          <h3 className="font-serif text-xl font-semibold">Complete your booking</h3>
+          <h3 className="text-2xl font-semibold uppercase leading-none tracking-tight">Complete your booking</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Seat{" "}
             <span className="font-semibold text-primary">{SEAT_LABELS[selectedSeat - 1]}</span>

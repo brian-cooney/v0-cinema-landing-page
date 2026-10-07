@@ -1,12 +1,14 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, Playfair_Display } from 'next/font/google'
+import { Archivo, IBM_Plex_Mono, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
-const _playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+// Archivo stands in for the heavy grotesk of the zine look, IBM Plex Mono for
+// captions, and Playfair only for the stacked logo block
+const archivo = Archivo({ subsets: ["latin"], variable: "--font-archivo", axes: ["wdth"] })
+const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-plex-mono" })
+const playfair = Playfair_Display({ subsets: ["latin"], weight: ["700", "900"], variable: "--font-playfair" })
 
 export const metadata: Metadata = {
   title: 'Embassy Cinema | Intimate Film Experience',
@@ -70,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${archivo.variable} ${plexMono.variable} ${playfair.variable}`}>
       <body className={`font-sans antialiased`}>
         {children}
         <Analytics />

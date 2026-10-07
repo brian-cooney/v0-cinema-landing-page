@@ -1,30 +1,21 @@
 import Link from "next/link"
-import { Film } from "lucide-react"
+import { Logo } from "@/components/logo"
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/50 bg-card/50 py-12">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-          <div className="flex items-center gap-2">
-            <Film className="h-5 w-5 text-primary" />
-            <span className="font-serif text-lg">Embassy Cinema</span>
-          </div>
-          <p className="text-center text-sm text-muted-foreground">
-            A passion project dedicated to the art of film.
+    <footer className="border-t-2 border-black bg-black px-4 py-12 text-white sm:px-6">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-4">
+          <Logo className="border-2 border-white" />
+          <p className="max-w-xs font-mono text-sm">
+            A passion project dedicated to the art of film. Finalborgo, Italy.
           </p>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/auth/login"
-              className="text-sm text-muted-foreground transition-colors hover:text-primary"
-            >
-              Admin Login
-            </Link>
-            <span className="text-muted-foreground/50">|</span>
-            <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} Embassy Cinema
-            </p>
-          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-sm font-bold uppercase">
+          <Link href="/book" className="hover:text-brand-yellow">Book a seat</Link>
+          <Link href="/dashboard" className="hover:text-brand-yellow">My bookings</Link>
+          <Link href="/auth/login" className="hover:text-brand-yellow">Admin</Link>
+          <span className="font-medium text-white/60">&copy; {new Date().getFullYear()} Embassy Cinema</span>
         </div>
       </div>
     </footer>

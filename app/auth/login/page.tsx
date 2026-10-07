@@ -5,7 +5,7 @@ import React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Film } from "lucide-react"
+import { Logo } from "@/components/logo"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import {
@@ -46,18 +46,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh w-full flex-col items-center justify-center bg-background p-6">
-      <Link
-        href="/"
-        className="mb-8 flex items-center gap-2 text-2xl font-serif font-medium"
-      >
-        <Film className="h-6 w-6 text-primary" />
-        Embassy Cinema
-      </Link>
+    <div className="flex min-h-svh w-full flex-col items-center justify-center bg-brand-pink p-6">
+      <Logo className="mb-8" />
       <div className="w-full max-w-sm">
-        <Card className="border-border/50 bg-card">
+        <Card className="border-2 border-black bg-white shadow-[6px_6px_0_0_#000]">
           <CardHeader className="text-center">
-            <CardTitle className="font-serif text-2xl">Admin Login</CardTitle>
+            <CardTitle className="text-3xl font-semibold uppercase leading-none tracking-tight">Admin Login</CardTitle>
             <CardDescription>
               Sign in to manage showtimes and bookings
             </CardDescription>

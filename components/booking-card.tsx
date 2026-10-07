@@ -83,9 +83,9 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="gap-0 overflow-hidden border-2 border-black py-0 shadow-[6px_6px_0_0_#000]">
       {booking.showtimes.image_url && (
-        <div className="aspect-video w-full overflow-hidden">
+        <div className="aspect-video w-full overflow-hidden border-b-2 border-black">
           <img
             src={booking.showtimes.image_url}
             alt={booking.showtimes.movie_title}
@@ -94,14 +94,14 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
         </div>
       )}
       <CardHeader>
-        <CardTitle className="line-clamp-1">
+        <CardTitle className="line-clamp-1 text-2xl font-semibold uppercase leading-none tracking-tight">
           {booking.showtimes.movie_title}
         </CardTitle>
         <CardDescription className="line-clamp-2">
           {booking.showtimes.movie_description}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 pb-6 font-mono text-sm font-bold uppercase">
         {error && (
           <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             {error}
@@ -125,9 +125,9 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
           <MapPin className="h-4 w-4 text-muted-foreground" />
           <span>Seat {seatLabels[booking.seat_number - 1]}</span>
         </div>
-        <div className="mt-4 rounded-md bg-primary/10 p-3 text-center">
-          <p className="text-xs text-muted-foreground">Booked for</p>
-          <p className="font-medium">{booking.customer_name}</p>
+        <div className="mt-4 border-2 border-black bg-brand-yellow p-3 text-center">
+          <p className="text-xs font-medium">Booked for</p>
+          <p className="font-bold normal-case">{booking.customer_name}</p>
         </div>
 
         <div className="pt-2">

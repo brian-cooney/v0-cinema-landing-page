@@ -28,7 +28,7 @@ export function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
   const isSoldOut = seatsRemaining <= 0
 
   const cardClassName =
-    "group flex flex-col rounded-lg border border-border/50 bg-card overflow-hidden transition-all"
+    "group flex flex-col overflow-hidden border-2 border-black bg-white transition-all"
   const cardContent = (
     <>
       {showtime.image_url ? (
@@ -47,11 +47,11 @@ export function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
         </div>
       )}
       <div className="flex flex-1 flex-col p-6">
-        <h3 className="mb-2 font-serif text-xl font-medium">{showtime.movie_title}</h3>
+        <h3 className="mb-2 text-2xl font-semibold uppercase leading-none tracking-tight">{showtime.movie_title}</h3>
         <p className="mb-4 line-clamp-2 flex-1 text-sm leading-relaxed text-muted-foreground">
           {showtime.movie_description}
         </p>
-        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-sm font-bold uppercase">
           <span className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4 text-primary" />
             {formatDate(showtime.showtime)}
@@ -67,12 +67,12 @@ export function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
             </span>
           )}
         </div>
-        <div className="mb-4 flex items-center gap-1.5 text-sm">
+        <div className="mb-4 flex items-center gap-1.5 font-mono text-sm font-bold uppercase">
           <Users className="h-4 w-4 text-primary" />
           {isSoldOut ? (
             <span className="font-medium text-destructive">No seats available</span>
           ) : (
-            <span className="text-muted-foreground">
+            <span>
               {seatsRemaining} {seatsRemaining === 1 ? "seat" : "seats"} remaining
             </span>
           )}
@@ -81,7 +81,7 @@ export function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
         <span
           className={cn(
             buttonVariants({ variant: "outline", size: "sm" }),
-            "w-full bg-transparent",
+            "w-full border-2 font-mono font-bold uppercase",
             isSoldOut
               ? "opacity-50"
               : "group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground",
@@ -100,7 +100,7 @@ export function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
       href={`/book?showtime=${showtime.id}`}
       className={cn(
         cardClassName,
-        "hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        "hover:-translate-y-1 hover:shadow-[6px_6px_0_0_#000] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black",
       )}
     >
       {cardContent}

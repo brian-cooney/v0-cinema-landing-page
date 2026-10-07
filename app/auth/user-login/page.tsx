@@ -3,7 +3,8 @@
 import { Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { Film, ArrowLeft, Loader2 } from "lucide-react"
+import { Logo } from "@/components/logo"
+import { ArrowLeft, Loader2 } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -20,18 +21,12 @@ function UserLoginContent() {
   const redirectTo = safeRedirectPath(searchParams.get("redirectTo"), "/dashboard")
 
   return (
-    <div className="flex min-h-svh w-full flex-col items-center justify-center bg-background p-6">
-      <Link
-        href="/"
-        className="mb-8 flex items-center gap-2 font-serif text-2xl font-medium"
-      >
-        <Film className="h-6 w-6 text-primary" />
-        Embassy Cinema
-      </Link>
+    <div className="flex min-h-svh w-full flex-col items-center justify-center bg-brand-cyan p-6">
+      <Logo className="mb-8" />
       <div className="w-full max-w-sm">
-        <Card className="border-border/50 bg-card">
+        <Card className="border-2 border-black bg-white shadow-[6px_6px_0_0_#000]">
           <CardHeader className="text-center">
-            <CardTitle className="font-serif text-2xl">Sign In</CardTitle>
+            <CardTitle className="text-3xl font-semibold uppercase leading-none tracking-tight">Sign In</CardTitle>
             <CardDescription>
               We&apos;ll email you a sign-in code. No password needed.
             </CardDescription>
@@ -62,13 +57,14 @@ export default function UserLoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-svh w-full flex-col items-center justify-center bg-background p-6">
-          <div className="flex items-center gap-2 font-serif text-2xl font-medium">
-            <Film className="h-6 w-6 text-primary" />
-            Embassy Cinema
-          </div>
+        <div className="flex min-h-svh w-full flex-col items-center justify-center bg-brand-cyan p-6">
+          <span className="bg-black px-2.5 py-2 font-logo text-[22px] font-black uppercase leading-[0.95] text-white">
+            Embassy
+            <br />
+            Cinema
+          </span>
           <div className="mt-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         </div>
       }
