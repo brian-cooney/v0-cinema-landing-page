@@ -1,8 +1,9 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { sendBookingConfirmation } from "@/lib/email"
+import { sendBookingConfirmation, type ScreeningDetails } from "@/lib/email"
 import { isAdmin } from "@/lib/auth"
+import { MAX_SEATS_PER_GUEST } from "@/lib/utils"
 
 const NOT_ADMIN = "You must be an admin to do that."
 const SEAT_TAKEN = "This seat has already been booked. Please choose another seat."
@@ -11,6 +12,32 @@ const SEAT_TAKEN = "This seat has already been booked. Please choose another sea
 // a double booking, including two people grabbing the same seat at once.
 function isSeatTakenError(error: { code?: string } | null) {
   return error?.code === "23505"
+}
+
+const LIMIT_REACHED = `You can book up to ${MAX_SEATS_PER_GUEST} seats per screening.`
+
+// Raised by the bookings_enforce_limit trigger (scripts/007)
+function isLimitError(error: { message?: string } | null) {
+  return error?.message === "booking_limit_reached"
+}
+
+// Film details shown in the confirmation email
+async function getScreeningDetails(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  showtimeId: string,
+): Promise<ScreeningDetails | null> {
+  const { data } = await supabase
+    .from("showtimes")
+    .select("movie_title, showtime, image_url, running_time")
+    .eq("id", showtimeId)
+    .single()
+
+  return data && {
+    movieTitle: data.movie_title,
+    showtime: data.showtime,
+    imageUrl: data.image_url,
+    runningTime: data.running_time,
+  }
 }
 
 interface BookSeatParams {
@@ -38,14 +65,19 @@ export async function bookSeat({
     return { error: "Invalid seat number" }
   }
 
-  // Get showtime details for the confirmation email
-  const { data: showtimeData } = await supabase
-    .from("showtimes")
-    .select("movie_title, showtime")
-    .eq("id", showtimeId)
-    .single()
+  // Friendly early check; the database trigger is what actually enforces it
+  const { count } = await supabase
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("showtime_id", showtimeId)
+    .eq("user_id", user.id)
 
-  // Create the booking with user_id if provided
+  if ((count ?? 0) >= MAX_SEATS_PER_GUEST) {
+    return { error: LIMIT_REACHED }
+  }
+
+  const screening = await getScreeningDetails(supabase, showtimeId)
+
   const { data, error } = await supabase
     .from("bookings")
     .insert({
@@ -61,19 +93,16 @@ export async function bookSeat({
   if (isSeatTakenError(error)) {
     return { error: SEAT_TAKEN }
   }
+  if (isLimitError(error)) {
+    return { error: LIMIT_REACHED }
+  }
   if (error) {
     return { error: "Failed to create booking. Please try again." }
   }
 
   // Send confirmation email
-  if (showtimeData) {
-    await sendBookingConfirmation({
-      to: user.email,
-      customerName,
-      movieTitle: showtimeData.movie_title,
-      showtime: showtimeData.showtime,
-      seatNumber,
-    })
+  if (screening) {
+    await sendBookingConfirmation({ to: user.email, customerName, seatNumber, screening })
   }
 
   return { success: true, booking: data }
@@ -211,12 +240,7 @@ export async function adminBookSeat({
     return { error: "Invalid seat number" }
   }
 
-  // Get showtime details for the confirmation email
-  const { data: showtimeData } = await supabase
-    .from("showtimes")
-    .select("movie_title, showtime")
-    .eq("id", showtimeId)
-    .single()
+  const screening = await getScreeningDetails(supabase, showtimeId)
 
   // Create the booking
   const { data, error } = await supabase
@@ -238,14 +262,8 @@ export async function adminBookSeat({
   }
 
   // Send confirmation email if requested
-  if (sendEmail && showtimeData) {
-    await sendBookingConfirmation({
-      to: customerEmail,
-      customerName,
-      movieTitle: showtimeData.movie_title,
-      showtime: showtimeData.showtime,
-      seatNumber,
-    })
+  if (sendEmail && screening) {
+    await sendBookingConfirmation({ to: customerEmail, customerName, seatNumber, screening })
   }
 
   return { success: true, booking: data }

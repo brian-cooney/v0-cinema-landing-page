@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, MapPin, Ticket, Film } from "lucide-react"
 import Link from "next/link"
 import { BookingCard } from "@/components/booking-card"
-import { CINEMA_TIME_ZONE } from "@/lib/utils"
+import { CINEMA_TIME_ZONE, SEAT_LABELS } from "@/lib/utils"
 
 interface Showtime {
   id: string
@@ -34,7 +34,6 @@ interface Booking {
   showtimes: Showtime
 }
 
-const SEAT_LABELS = ["A1", "A2", "A3", "B1", "B2", "B3"]
 
 export default async function DashboardPage() {
   const supabase = await createClient()
