@@ -2,11 +2,13 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Calendar, MapPin, Ticket, Film } from "lucide-react"
+import { Calendar, Check, MapPin, Ticket, Film } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { BookingCard } from "@/components/booking-card"
+import { ShowtimeCard } from "@/components/showtime-card"
+import { getUpcomingShowtimes } from "@/lib/showtimes"
 import { CINEMA_TIME_ZONE, SEAT_LABELS } from "@/lib/utils"
 
 interface Showtime {
@@ -83,6 +85,11 @@ export default async function DashboardPage() {
     booking => new Date(booking.showtimes.showtime) <= now
   )
 
+  // Screenings the guest hasn't booked yet, shown as poster cards
+  const otherScreenings = await getUpcomingShowtimes(supabase, {
+    excludeIds: upcomingBookings.map((booking) => booking.showtimes.id),
+  })
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", {
@@ -118,23 +125,41 @@ export default async function DashboardPage() {
 
           {/* Upcoming Bookings */}
           <section className="mb-12">
-            <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
-              <Ticket className="h-5 w-5 text-primary" />
-              Upcoming Screenings
-            </h2>
+            {upcomingBookings.length > 0 && (
+              <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
+                <Ticket className="h-5 w-5 text-primary" />
+                Your Upcoming Bookings
+              </h2>
+            )}
             
             {upcomingBookings.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Film className="mb-4 h-12 w-12 text-muted-foreground/50" />
-                  <p className="mb-4 text-center text-muted-foreground">
-                    You don&apos;t have any upcoming bookings.
+              <div className="relative overflow-hidden rounded-xl border border-border/50">
+                <Image
+                  src="/hero-cinema.webp"
+                  alt=""
+                  fill
+                  sizes="100vw"
+                  className="object-cover opacity-40"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+                <div className="relative flex flex-col items-center px-6 py-16 text-center md:py-20">
+                  <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-primary">
+                    Six seats · One screen · Always free
                   </p>
-                  <Button asChild>
-                    <Link href="/book">Browse Showtimes</Link>
+                  <h3 className="font-serif text-3xl font-semibold md:text-4xl">
+                    Your seat is waiting
+                  </h3>
+                  <p className="mt-3 max-w-md text-muted-foreground">
+                    You haven&apos;t booked a screening yet. Pick a film below and save
+                    your seat in under a minute.
+                  </p>
+                  <Button asChild size="lg" className="mt-8">
+                    <Link href={otherScreenings.length > 0 ? "#coming-up" : "/book"}>
+                      See what&apos;s on
+                    </Link>
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {upcomingBookings.map((booking) => (
@@ -148,37 +173,84 @@ export default async function DashboardPage() {
             )}
           </section>
 
-          {/* Past Bookings */}
-          {pastBookings.length > 0 && (
-            <section>
-              <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold text-muted-foreground">
-                <Film className="h-5 w-5" />
-                Past Screenings
+          {/* Screenings they haven't booked */}
+          {otherScreenings.length > 0 && (
+            <section id="coming-up" className="mb-12 scroll-mt-24">
+              <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
+                <Film className="h-5 w-5 text-primary" />
+                {upcomingBookings.length === 0 ? "Coming Up" : "More Screenings"}
               </h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {pastBookings.map((booking) => (
-                  <Card key={booking.id} className="opacity-75">
-                    <CardHeader>
-                      <CardTitle className="line-clamp-1 text-base">
-                        {booking.showtimes.movie_title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(booking.showtimes.showtime)}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        <span>Seat {SEAT_LABELS[booking.seat_number - 1]}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {otherScreenings.map((showtime) => (
+                  <ShowtimeCard key={showtime.id} showtime={showtime} />
                 ))}
               </div>
             </section>
           )}
+
         </div>
+
+        {/* Films they've watched: a separate band, like the home page archive */}
+        {pastBookings.length > 0 && (
+          <section className="border-t border-border/50 bg-muted/30 py-16">
+            <div className="container mx-auto px-4">
+              <div className="mb-8">
+                <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  Your archive
+                </p>
+                <h2 className="font-serif text-2xl font-semibold md:text-3xl">
+                  Films You&apos;ve Watched
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {pastBookings.length} {pastBookings.length === 1 ? "film" : "films"} at Embassy Cinema
+                </p>
+              </div>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {pastBookings.map((booking) => (
+                  <div
+                    key={booking.id}
+                    className="flex flex-col overflow-hidden rounded-lg border border-border/50 bg-card"
+                  >
+                    <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted/30">
+                      {booking.showtimes.image_url ? (
+                        <Image
+                          src={booking.showtimes.image_url}
+                          alt={booking.showtimes.movie_title}
+                          fill
+                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          <Film className="h-10 w-10 text-muted-foreground/50" />
+                        </div>
+                      )}
+                      <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-background/80 px-2.5 py-1 text-xs font-medium backdrop-blur">
+                        <Check className="h-3 w-3 text-primary" />
+                        Watched
+                      </span>
+                    </div>
+                    <div className="space-y-2 p-5">
+                      <h3 className="line-clamp-1 font-serif text-lg font-medium">
+                        {booking.showtimes.movie_title}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          {formatDate(booking.showtimes.showtime)}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          Seat {SEAT_LABELS[booking.seat_number - 1]}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
       <Footer />
     </div>
