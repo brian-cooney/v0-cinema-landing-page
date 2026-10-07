@@ -14,7 +14,6 @@ interface Showtime {
   showtime: string
   image_url: string | null
   running_time: number | null
-  bookings: { count: number }[]
 }
 
 export async function UpcomingShowtimes() {
@@ -22,10 +21,22 @@ export async function UpcomingShowtimes() {
 
   const { data: showtimes } = await supabase
     .from("showtimes")
-    .select("*, bookings(count)")
+    .select("*")
     .gte("showtime", new Date().toISOString())
     .order("showtime", { ascending: true })
     .limit(6)
+
+  // Count taken seats via the public booked_seats view; guests can't read
+  // other people's rows in the bookings table directly.
+  const { data: bookedSeats } = await supabase
+    .from("booked_seats")
+    .select("showtime_id")
+    .in("showtime_id", showtimes?.map((s) => s.id) ?? [])
+
+  const bookedCounts = new Map<string, number>()
+  for (const { showtime_id } of bookedSeats ?? []) {
+    bookedCounts.set(showtime_id, (bookedCounts.get(showtime_id) ?? 0) + 1)
+  }
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
@@ -62,7 +73,7 @@ export async function UpcomingShowtimes() {
         {showtimes && showtimes.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {showtimes.map((showtime: Showtime) => {
-              const bookedCount = showtime.bookings?.[0]?.count ?? 0
+              const bookedCount = bookedCounts.get(showtime.id) ?? 0
               const seatsRemaining = TOTAL_SEATS - bookedCount
               const isSoldOut = seatsRemaining <= 0
 

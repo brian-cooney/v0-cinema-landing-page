@@ -1,7 +1,14 @@
 import { put } from "@vercel/blob"
 import { type NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
+import { isAdmin } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  if (!(await isAdmin(supabase))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
     const formData = await request.formData()
     const file = formData.get("file") as File

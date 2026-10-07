@@ -2,40 +2,41 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { sendBookingConfirmation } from "@/lib/email"
+import { isAdmin } from "@/lib/auth"
+
+const NOT_ADMIN = "You must be an admin to do that."
+const SEAT_TAKEN = "This seat has already been booked. Please choose another seat."
+
+// Postgres unique_violation: the (showtime_id, seat_number) constraint caught
+// a double booking, including two people grabbing the same seat at once.
+function isSeatTakenError(error: { code?: string } | null) {
+  return error?.code === "23505"
+}
 
 interface BookSeatParams {
   showtimeId: string
   seatNumber: number
   customerName: string
-  customerEmail: string
-  userId?: string
 }
 
 export async function bookSeat({
   showtimeId,
   seatNumber,
   customerName,
-  customerEmail,
-  userId,
 }: BookSeatParams) {
   const supabase = await createClient()
+
+  // Take the guest's identity from their session, never from the client
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user?.email) {
+    return { error: "You must be signed in to book a seat" }
+  }
 
   // Validate seat number
   if (seatNumber < 1 || seatNumber > 6) {
     return { error: "Invalid seat number" }
   }
-
-  // Check if the seat is already booked
-  const { data: existingBooking } = await supabase
-    .from("bookings")
-    .select("id")
-    .eq("showtime_id", showtimeId)
-    .eq("seat_number", seatNumber)
-    .maybeSingle()
-
-    if (existingBooking) {
-      return { error: "This seat is unavailable. Please choose another seat." }
-    }
 
   // Get showtime details for the confirmation email
   const { data: showtimeData } = await supabase
@@ -51,12 +52,15 @@ export async function bookSeat({
       showtime_id: showtimeId,
       seat_number: seatNumber,
       customer_name: customerName,
-      customer_email: customerEmail,
-      user_id: userId || null,
+      customer_email: user.email,
+      user_id: user.id,
     })
     .select()
     .single()
 
+  if (isSeatTakenError(error)) {
+    return { error: SEAT_TAKEN }
+  }
   if (error) {
     return { error: "Failed to create booking. Please try again." }
   }
@@ -64,7 +68,7 @@ export async function bookSeat({
   // Send confirmation email
   if (showtimeData) {
     await sendBookingConfirmation({
-      to: customerEmail,
+      to: user.email,
       customerName,
       movieTitle: showtimeData.movie_title,
       showtime: showtimeData.showtime,
@@ -93,6 +97,10 @@ export async function createShowtime({
   runningTime,
 }: CreateShowtimeParams) {
   const supabase = await createClient()
+
+  if (!(await isAdmin(supabase))) {
+    return { error: NOT_ADMIN }
+  }
 
   const { data, error } = await supabase
     .from("showtimes")
@@ -132,6 +140,10 @@ export async function updateShowtime({
 }: UpdateShowtimeParams) {
   const supabase = await createClient()
 
+  if (!(await isAdmin(supabase))) {
+    return { error: NOT_ADMIN }
+  }
+
   const { data, error } = await supabase
     .from("showtimes")
     .update({
@@ -154,6 +166,10 @@ export async function updateShowtime({
 
 export async function deleteShowtime(id: string) {
   const supabase = await createClient()
+
+  if (!(await isAdmin(supabase))) {
+    return { error: NOT_ADMIN }
+  }
 
   // First delete all bookings for this showtime
   await supabase.from("bookings").delete().eq("showtime_id", id)
@@ -186,21 +202,13 @@ export async function adminBookSeat({
 }: AdminBookSeatParams) {
   const supabase = await createClient()
 
+  if (!(await isAdmin(supabase))) {
+    return { error: NOT_ADMIN }
+  }
+
   // Validate seat number
   if (seatNumber < 1 || seatNumber > 6) {
     return { error: "Invalid seat number" }
-  }
-
-  // Check if the seat is already booked
-  const { data: existingBooking } = await supabase
-    .from("bookings")
-    .select("id")
-    .eq("showtime_id", showtimeId)
-    .eq("seat_number", seatNumber)
-    .maybeSingle()
-
-  if (existingBooking) {
-    return { error: "This seat is unavailable. Please choose another seat." }
   }
 
   // Get showtime details for the confirmation email
@@ -222,6 +230,9 @@ export async function adminBookSeat({
     .select()
     .single()
 
+  if (isSeatTakenError(error)) {
+    return { error: SEAT_TAKEN }
+  }
   if (error) {
     return { error: "Failed to create booking. Please try again." }
   }
@@ -243,6 +254,10 @@ export async function adminBookSeat({
 export async function adminDeleteBooking(bookingId: string) {
   const supabase = await createClient()
 
+  if (!(await isAdmin(supabase))) {
+    return { error: NOT_ADMIN }
+  }
+
   const { error } = await supabase
     .from("bookings")
     .delete()
@@ -257,6 +272,10 @@ export async function adminDeleteBooking(bookingId: string) {
 
 export async function getShowtimeBookings(showtimeId: string) {
   const supabase = await createClient()
+
+  if (!(await isAdmin(supabase))) {
+    return { error: NOT_ADMIN }
+  }
 
   const { data, error } = await supabase
     .from("bookings")
@@ -373,20 +392,6 @@ export async function updateBooking({
     return { error: "Invalid seat number" }
   }
 
-  // If seat number changed, check if the new seat is available
-  if (seatNumber !== booking.seat_number) {
-    const { data: existingBooking } = await supabase
-      .from("bookings")
-      .select("id")
-      .eq("showtime_id", booking.showtime_id)
-      .eq("seat_number", seatNumber)
-      .maybeSingle()
-
-  if (existingBooking) {
-    return { error: "This seat is unavailable. Please choose another seat." }
-  }
-  }
-
   // Update the booking
   const { data, error } = await supabase
     .from("bookings")
@@ -398,30 +403,12 @@ export async function updateBooking({
     .select()
     .single()
 
+  if (isSeatTakenError(error)) {
+    return { error: SEAT_TAKEN }
+  }
   if (error) {
     return { error: "Failed to update booking. Please try again." }
   }
 
   return { success: true, booking: data }
-}
-
-export async function getAvailableSeats(showtimeId: string, excludeBookingId?: string) {
-  const supabase = await createClient()
-
-  let query = supabase
-    .from("bookings")
-    .select("seat_number")
-    .eq("showtime_id", showtimeId)
-
-  if (excludeBookingId) {
-    query = query.neq("id", excludeBookingId)
-  }
-
-  const { data: bookings } = await query
-
-  const bookedSeats = bookings?.map(b => b.seat_number) || []
-  const allSeats = [1, 2, 3, 4, 5, 6]
-  const availableSeats = allSeats.filter(seat => !bookedSeats.includes(seat))
-
-  return { availableSeats, bookedSeats }
 }

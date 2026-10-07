@@ -6,7 +6,7 @@ import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Calendar, Clock, Edit2, Trash2, X, Check, Upload, ImageIcon, Users, Plus, ChevronDown, ChevronUp, Timer } from "lucide-react"
-import { formatRunningTime } from "@/lib/utils"
+import { formatRunningTime, romeTimeToISO } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -166,8 +166,8 @@ export function AdminShowtimeList({ showtimes }: AdminShowtimeListProps) {
 
   const handleUpdate = async (id: string) => {
     setIsUpdating(true)
-    // Combine date and time with explicit Italian timezone
-    const showtime = `${editForm.date}T${editForm.time}:00+01:00`
+    // Interpret the entered date and time as Rome time (handles summer time)
+    const showtime = romeTimeToISO(editForm.date, editForm.time)
 
     const result = await updateShowtime({
       id,

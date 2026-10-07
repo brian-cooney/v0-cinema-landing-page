@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, MapPin, Ticket, Film } from "lucide-react"
 import Link from "next/link"
 import { BookingCard } from "@/components/booking-card"
+import { CINEMA_TIME_ZONE } from "@/lib/utils"
 
 interface Showtime {
   id: string
@@ -90,6 +91,7 @@ export default async function DashboardPage() {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: CINEMA_TIME_ZONE,
     })
   }
 
@@ -99,6 +101,7 @@ export default async function DashboardPage() {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
+      timeZone: CINEMA_TIME_ZONE,
     })
   }
 
