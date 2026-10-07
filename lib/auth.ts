@@ -16,3 +16,16 @@ export function safeRedirectPath(path: string | null, fallback = "/"): string {
   }
   return path
 }
+
+// Link bookings made with this email before the guest had an account, so they
+// show up in "My Bookings". Matches rows where user_id is still NULL.
+export async function linkGuestBookings(supabase: SupabaseClient) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) return
+
+  await supabase
+    .from("bookings")
+    .update({ user_id: user.id })
+    .eq("customer_email", user.email)
+    .is("user_id", null)
+}
