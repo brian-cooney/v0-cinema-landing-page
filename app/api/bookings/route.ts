@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient()
 
   const { data: bookings, error } = await supabase
-    .from("bookings")
-    .select("seat_number, customer_name")
+    .from("booked_seats")
+    .select("seat_number, first_name")
     .eq("showtime_id", showtimeId)
 
   if (error) {

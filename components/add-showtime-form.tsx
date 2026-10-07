@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createShowtime } from "@/app/actions"
+import { romeTimeToISO } from "@/lib/utils"
 
 export function AddShowtimeForm() {
   const router = useRouter()
@@ -89,9 +90,8 @@ export function AddShowtimeForm() {
       return
     }
 
-    // Combine date and time with explicit Italian timezone
-    // This ensures the time is stored correctly as the admin intended it in Italian time
-    const showtime = `${date}T${time}:00+01:00`
+    // Interpret the entered date and time as Rome time (handles summer time)
+    const showtime = romeTimeToISO(date, time)
 
     const result = await createShowtime({
       movieTitle,

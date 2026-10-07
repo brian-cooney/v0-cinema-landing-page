@@ -13,7 +13,7 @@ import type { User } from "@supabase/supabase-js"
 
 interface Booking {
   seat_number: number
-  customer_name: string
+  first_name: string
 }
 
 const TOTAL_SEATS = 6
@@ -177,7 +177,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
   )
 
   const bookingsMap = new Map(
-    data?.bookings?.map((b) => [b.seat_number, b.customer_name]) || []
+    data?.bookings?.map((b) => [b.seat_number, b.first_name]) || []
   )
   const bookedSeats = new Set(data?.bookings?.map((b) => b.seat_number) || [])
 
@@ -210,8 +210,6 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
         showtimeId,
         seatNumber: selectedSeat,
         customerName: name.trim(),
-        customerEmail: user.email,
-        userId: user.id,
       })
 
       if (result.error) {

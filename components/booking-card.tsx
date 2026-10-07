@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Calendar, Clock, MapPin, Trash2, Loader2 } from "lucide-react"
 import { cancelBooking } from "@/app/actions"
+import { CINEMA_TIME_ZONE } from "@/lib/utils"
 
 interface Showtime {
   id: string
@@ -52,6 +53,7 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: CINEMA_TIME_ZONE,
     })
   }
 
@@ -61,6 +63,7 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
+      timeZone: CINEMA_TIME_ZONE,
     })
   }
 
