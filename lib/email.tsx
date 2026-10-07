@@ -58,79 +58,125 @@ function seatLabel(seatNumber: number): string {
   return SEAT_LABELS[seatNumber - 1] ?? String(seatNumber)
 }
 
+// Brand colours and font stacks. Most email apps ignore web fonts, so each
+// stack falls back to a close system font.
+const BRAND = { yellow: "#fcd450", cyan: "#48bdd8", pink: "#f781be" }
+const FONT_DISPLAY = "'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+const FONT_MONO = "'IBM Plex Mono', 'Courier New', Courier, monospace"
+const FONT_LOGO = "Georgia, 'Times New Roman', serif"
+
 // The film card shared by every guest email: poster, title, date, time, seat
 function filmCard(screening: ScreeningDetails, seatNumber: number): string {
   const { date, time } = formatScreeningTime(screening.showtime)
   const title = escapeHtml(screening.movieTitle)
 
   const poster = screening.imageUrl
-    ? `<img src="${escapeHtml(screening.imageUrl)}" alt="${title}" width="520" style="display: block; width: 100%; max-width: 520px; height: auto; border: 0; border-radius: 8px 8px 0 0;">`
+    ? `<tr><td style="border-bottom: 2px solid #000000;"><img src="${escapeHtml(screening.imageUrl)}" alt="${title}" width="540" style="display: block; width: 100%; max-width: 540px; height: auto; border: 0;"></td></tr>`
     : ""
 
   const row = (label: string, value: string, highlight = false) => `
     <tr>
-      <td style="padding: 8px 0; color: #a0a0b0; font-size: 14px;">${label}</td>
-      <td style="padding: 8px 0; color: ${highlight ? "#d4a853" : "#e8e8f0"}; font-size: 14px; text-align: right;${highlight ? " font-weight: 600;" : ""}">${value}</td>
+      <td style="padding: 6px 0; font-family: ${FONT_MONO}; font-size: 13px; text-transform: uppercase;">${label}</td>
+      <td align="right" style="padding: 6px 0; font-family: ${FONT_MONO}; font-size: 13px; font-weight: 700; text-transform: uppercase;">
+        ${highlight ? `<span style="background-color: ${BRAND.yellow}; border: 2px solid #000000; padding: 2px 8px;">${value}</span>` : value}
+      </td>
     </tr>`
 
   return `
-    <div style="background-color: #1a1a2e; border-radius: 8px; margin-bottom: 32px; overflow: hidden;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border: 2px solid #000000; margin: 0 0 24px 0;">
       ${poster}
-      <div style="padding: 24px;">
-        <h2 style="color: #e8e8f0; font-size: 22px; margin: 0 0 16px 0; font-weight: 600;">${title}</h2>
-        <table style="width: 100%; border-collapse: collapse;">
-          ${row("Date", date)}
-          ${row("Time", time)}
-          ${screening.runningTime ? row("Running time", `${screening.runningTime} min`) : ""}
-          ${row("Seat", seatLabel(seatNumber), true)}
-        </table>
-      </div>
-    </div>`
+      <tr>
+        <td style="padding: 20px;">
+          <p style="margin: 0 0 12px 0; font-family: ${FONT_DISPLAY}; font-size: 26px; font-weight: 800; line-height: 1; text-transform: uppercase; color: #000000;">${title}</p>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            ${row("Date", date)}
+            ${row("Time", time)}
+            ${screening.runningTime ? row("Running time", `${screening.runningTime} min`) : ""}
+            ${row("Seat", seatLabel(seatNumber), true)}
+          </table>
+        </td>
+      </tr>
+    </table>`
 }
 
-function note(title: string, body: string, accent = "#6a6a7a"): string {
+// A flat colour block with a mono label, e.g. cyan "Add to calendar"
+function note(title: string, body: string, background: string): string {
   return `
-    <div style="background-color: rgba(106, 106, 122, 0.1); border-left: 3px solid ${accent}; padding: 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px;">
-      <p style="color: ${accent === "#6a6a7a" ? "#a0a0b0" : accent}; font-size: 14px; margin: 0; font-weight: 500;">${title}</p>
-      <p style="color: #a0a0b0; font-size: 13px; margin: 8px 0 0 0; line-height: 1.5;">${body}</p>
-    </div>`
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px 0;">
+      <tr>
+        <td style="background-color: ${background}; border: 2px solid #000000; padding: 14px 16px;">
+          <p style="margin: 0 0 6px 0; font-family: ${FONT_MONO}; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #000000;">${title}</p>
+          <p style="margin: 0; font-family: ${FONT_DISPLAY}; font-size: 14px; line-height: 1.5; color: #000000;">${body}</p>
+        </td>
+      </tr>
+    </table>`
 }
 
-function emailLayout(subtitle: string, content: string): string {
+function button(href: string, label: string): string {
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 8px 0 0 0;">
+      <tr>
+        <td style="background-color: #000000;">
+          <a href="${href}" style="display: inline-block; padding: 12px 20px; font-family: ${FONT_DISPLAY}; font-size: 16px; font-weight: 800; text-transform: uppercase; color: #ffffff; text-decoration: none;">${label}</a>
+        </td>
+      </tr>
+    </table>`
+}
+
+// Yellow page, white card with a black border, logo stamp, label and headline
+function emailLayout(label: string, headline: string, content: string): string {
   return `
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;800&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
       </head>
-      <body style="margin: 0; padding: 0; background-color: #1a1a2e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-          <div style="background-color: #242442; border-radius: 12px; padding: 40px; border: 1px solid #3a3a5c;">
-            <div style="text-align: center; margin-bottom: 32px;">
-              <h1 style="color: #d4a853; font-size: 28px; margin: 0; font-weight: 600;">Embassy Cinema</h1>
-              <p style="color: #a0a0b0; font-size: 14px; margin-top: 8px;">${subtitle}</p>
-            </div>
-            ${content}
-            <div style="text-align: center; border-top: 1px solid #3a3a5c; padding-top: 24px; margin-top: 16px;">
-              <p style="color: #a0a0b0; font-size: 13px; margin: 0;">We look forward to seeing you!</p>
-              <p style="color: #6a6a7a; font-size: 12px; margin-top: 16px;">Embassy Cinema - An intimate film experience</p>
-            </div>
-          </div>
-        </div>
+      <body style="margin: 0; padding: 0; background-color: ${BRAND.yellow};">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: ${BRAND.yellow};">
+          <tr>
+            <td align="center" style="padding: 32px 12px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border: 2px solid #000000;">
+                <tr>
+                  <td style="padding: 28px 28px 0 28px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="background-color: #000000; padding: 8px 10px; font-family: ${FONT_LOGO}; font-size: 20px; font-weight: 900; line-height: 0.95; text-transform: uppercase; color: #ffffff;">Embassy<br>Cinema</td>
+                      </tr>
+                    </table>
+                    <p style="margin: 28px 0 0 0;"><span style="background-color: #000000; padding: 4px 8px; font-family: ${FONT_MONO}; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #ffffff;">${label}</span></p>
+                    <h1 style="margin: 14px 0 0 0; font-family: ${FONT_DISPLAY}; font-size: 40px; font-weight: 800; line-height: 0.95; text-transform: uppercase; color: #000000;">${headline}</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 24px 28px 28px 28px;">${content}</td>
+                </tr>
+                <tr>
+                  <td style="background-color: #000000; padding: 18px 28px; font-family: ${FONT_MONO}; font-size: 12px; line-height: 1.6; text-transform: uppercase; color: #ffffff;">
+                    Embassy Cinema · Finalborgo, Italy<br>
+                    Six seats · One screen · Always free<br>
+                    <a href="${SITE_URL}" style="color: ${BRAND.yellow}; text-decoration: none;">www.embassycinema.com</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </body>
     </html>`
 }
 
 function greeting(customerName: string, message: string): string {
   return `
-    <p style="color: #e8e8f0; font-size: 16px; margin-bottom: 24px;">Hello ${escapeHtml(customerName)},</p>
-    <p style="color: #a0a0b0; font-size: 15px; line-height: 1.6; margin-bottom: 32px;">${message}</p>`
+    <p style="margin: 0 0 8px 0; font-family: ${FONT_DISPLAY}; font-size: 16px; color: #000000;">Hello ${escapeHtml(customerName)},</p>
+    <p style="margin: 0 0 24px 0; font-family: ${FONT_DISPLAY}; font-size: 16px; line-height: 1.5; color: #000000;">${message}</p>`
 }
 
 const ARRIVAL_NOTE = note(
-  "Reminder",
-  "Please arrive at least 10 minutes before the screening. No ticket required - just give your name at the door.",
+  "At the door",
+  "Please arrive at least 10 minutes before the screening. No ticket needed, just give your name at the door.",
+  "#f0f0f0",
 )
 
 // ICS text values must escape backslashes, commas, semicolons and newlines
@@ -177,15 +223,17 @@ END:VCALENDAR`
 
 export function confirmationEmailHtml({ customerName, seatNumber, screening }: GuestEmailParams) {
   return emailLayout(
-    "Your Booking Confirmation",
-    greeting(customerName, "Thank you for your reservation! Your seat has been confirmed for the following screening:") +
+    "Booking confirmed",
+    "You&#39;re booked!",
+    greeting(customerName, "Thanks for your reservation. Your seat is confirmed for:") +
       filmCard(screening, seatNumber) +
       note(
-        "Add to Calendar",
-        "We've attached a calendar invite to this email. Open the .ics file to add this screening to your calendar with a reminder.",
-        "#d4a853",
+        "Add to calendar",
+        "We've attached a calendar invite to this email. Open the .ics file to add the screening to your calendar with a reminder.",
+        BRAND.cyan,
       ) +
-      ARRIVAL_NOTE,
+      ARRIVAL_NOTE +
+      button(`${SITE_URL}/dashboard`, "My bookings →"),
   )
 }
 
@@ -231,13 +279,15 @@ export function reminderEmail({ to, customerName, seatNumber, screening }: Guest
     to: [to],
     subject: `Reminder: ${screening.movieTitle} ${when} at Embassy Cinema`,
     html: emailLayout(
-      "Screening Reminder",
-      greeting(customerName, `Just a reminder that you're booked for <strong style="color: #e8e8f0;">${escapeHtml(screening.movieTitle)}</strong> ${when}.`) +
+      "Screening reminder",
+      `See you ${relativeDay(screening.showtime)}`,
+      greeting(customerName, `Just a reminder that you're booked for <strong>${escapeHtml(screening.movieTitle)}</strong> ${when}.`) +
         filmCard(screening, seatNumber) +
         ARRIVAL_NOTE +
         note(
           "Can't make it?",
-          `Please <a href="${SITE_URL}/dashboard" style="color: #d4a853;">cancel your booking</a> so someone else can have your seat.`,
+          `Please <a href="${SITE_URL}/dashboard" style="color: #000000; font-weight: 700;">cancel your booking</a> so someone else can have your seat.`,
+          BRAND.pink,
         ),
     ),
   }
