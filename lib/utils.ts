@@ -19,6 +19,12 @@ export function formatRunningTime(minutes: number): string {
 
 export const CINEMA_TIME_ZONE = "Europe/Rome"
 
+// Seats 1-6 as shown to guests: two rows of three
+export const SEAT_LABELS = ["A1", "A2", "A3", "B1", "B2", "B3"]
+
+// Also enforced by the bookings_enforce_limit trigger (scripts/007)
+export const MAX_SEATS_PER_GUEST = 2
+
 // Offset of Rome from UTC (in ms) at the given instant: +1h in winter, +2h in summer.
 function romeOffsetMs(timestamp: number): number {
   const parts = Object.fromEntries(

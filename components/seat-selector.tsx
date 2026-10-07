@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import useSWR, { mutate } from "swr"
+import Link from "next/link"
 import { Check, CheckCircle2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { bookSeat } from "@/app/actions"
 import { EmailCodeSignIn } from "@/components/email-code-sign-in"
-import { cn } from "@/lib/utils"
+import { cn, MAX_SEATS_PER_GUEST, SEAT_LABELS } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 
@@ -19,7 +20,6 @@ interface Booking {
 }
 
 const TOTAL_SEATS = 6
-const SEAT_LABELS = ["A1", "A2", "A3", "B1", "B2", "B3"]
 
 const fetcher = async (url: string) => {
   const res = await fetch(url)
@@ -135,6 +135,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [myBookingCount, setMyBookingCount] = useState(0)
   const bookingPanelRef = useRef<HTMLDivElement>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
@@ -189,6 +190,24 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
     const firstName = fullName.split(" ")[0]
     return firstName.length > 6 ? firstName.slice(0, 5) + "..." : firstName
   }
+
+  // How many seats this guest already has for this screening (RLS only lets
+  // them see their own bookings)
+  useEffect(() => {
+    if (!user) {
+      setMyBookingCount(0)
+      return
+    }
+    const supabase = createClient()
+    supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("showtime_id", showtimeId)
+      .eq("user_id", user.id)
+      .then(({ count }) => setMyBookingCount(count ?? 0))
+  }, [user, showtimeId, bookingSuccess])
+
+  const reachedLimit = myBookingCount >= MAX_SEATS_PER_GUEST
 
   // Where the emailed sign-in link should bring the guest back to
   const bookingPath = `/book?showtime=${showtimeId}${selectedSeat ? `&seat=${selectedSeat}` : ""}`
@@ -257,16 +276,22 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
         <p className="mt-4 text-sm text-muted-foreground">
           Remember: All screenings are free. Just show up and enjoy the film!
         </p>
-        <Button
-          className="mt-6"
-          onClick={() => {
-            setBookingSuccess(false)
-            setSelectedSeat(null)
-            setName("")
-          }}
-        >
-          Book Another Seat
-        </Button>
+        {reachedLimit ? (
+          <p className="mt-6 text-sm text-muted-foreground">
+            That&apos;s the maximum of {MAX_SEATS_PER_GUEST} seats per guest for this screening.
+          </p>
+        ) : (
+          <Button
+            className="mt-6"
+            onClick={() => {
+              setBookingSuccess(false)
+              setSelectedSeat(null)
+              setName("")
+            }}
+          >
+            Book Another Seat
+          </Button>
+        )}
       </div>
       </>
     )
@@ -381,7 +406,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
           <p className="mt-1 text-sm text-muted-foreground">
             Seat{" "}
             <span className="font-semibold text-primary">{SEAT_LABELS[selectedSeat - 1]}</span>
-            {" "}· free admission
+            {" "}· free admission · up to {MAX_SEATS_PER_GUEST} seats per guest
           </p>
 
           <ol className="mt-6 space-y-6">
@@ -398,7 +423,16 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
             </BookingStep>
 
             <BookingStep number={2} title="Confirm your seat" disabled={!user}>
-              {user && (
+              {user && reachedLimit ? (
+                <p className="text-sm text-muted-foreground">
+                  You&apos;ve already booked {MAX_SEATS_PER_GUEST} seats for this screening, the
+                  maximum per guest. You can change or cancel them in{" "}
+                  <Link href="/dashboard" className="text-primary underline underline-offset-2">
+                    My Bookings
+                  </Link>
+                  .
+                </p>
+              ) : user && (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Your name</Label>
