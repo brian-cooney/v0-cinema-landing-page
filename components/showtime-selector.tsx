@@ -47,10 +47,10 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
+    return date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
       minute: "2-digit",
-      hour12: true,
+      hour12: false,
       timeZone: "Europe/Rome",
     })
   }
