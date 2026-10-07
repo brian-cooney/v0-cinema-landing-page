@@ -114,26 +114,29 @@ export default async function DashboardPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
-      <main className="flex-1 mt-6">
-        <div className="container mx-auto px-4 py-12">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight">My Bookings</h1>
-            <p className="mt-2 text-muted-foreground">
-              Welcome back, {user.email}
-            </p>
+      <main className="flex-1">
+        <section className="border-b-2 border-black bg-brand-cyan px-4 pb-10 pt-32 sm:px-6 sm:pt-36">
+          <div className="container mx-auto">
+            <p className="font-mono text-sm font-bold uppercase">Signed in as {user.email}</p>
+            <h1 className="mt-3 text-6xl font-semibold uppercase leading-[0.9] tracking-tight sm:text-8xl">
+              My bookings <span aria-hidden="true">↓</span>
+            </h1>
           </div>
+        </section>
+
+        <div className="container mx-auto px-4 py-12">
 
           {/* Upcoming Bookings */}
           <section className="mb-12">
             {upcomingBookings.length > 0 && (
-              <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
-                <Ticket className="h-5 w-5 text-primary" />
-                Your Upcoming Bookings
+              <h2 className="mb-6 inline-flex items-center gap-2 bg-black px-3 py-1.5 font-mono text-sm font-bold uppercase text-white">
+                <Ticket className="h-4 w-4" />
+                Your upcoming bookings
               </h2>
             )}
             
             {upcomingBookings.length === 0 ? (
-              <div className="relative overflow-hidden rounded-xl border border-border/50">
+              <div className="relative overflow-hidden border-2 border-black bg-black text-white shadow-[6px_6px_0_0_#000]">
                 <Image
                   src="/hero-cinema.webp"
                   alt=""
@@ -141,19 +144,19 @@ export default async function DashboardPage() {
                   sizes="100vw"
                   className="object-cover opacity-40"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
                 <div className="relative flex flex-col items-center px-6 py-16 text-center md:py-20">
-                  <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-primary">
+                  <p className="mb-3 font-mono text-sm font-bold uppercase text-brand-yellow">
                     Six seats · One screen · Always free
                   </p>
-                  <h3 className="font-serif text-3xl font-semibold md:text-4xl">
+                  <h3 className="text-4xl font-semibold uppercase leading-none tracking-tight md:text-6xl">
                     Your seat is waiting
                   </h3>
-                  <p className="mt-3 max-w-md text-muted-foreground">
+                  <p className="mt-4 max-w-md font-mono text-sm">
                     You haven&apos;t booked a screening yet. Pick a film below and save
                     your seat in under a minute.
                   </p>
-                  <Button asChild size="lg" className="mt-8">
+                  <Button asChild size="lg" className="mt-8 bg-brand-yellow text-lg font-semibold uppercase text-black hover:bg-white">
                     <Link href={otherScreenings.length > 0 ? "#coming-up" : "/book"}>
                       See what&apos;s on
                     </Link>
@@ -176,9 +179,9 @@ export default async function DashboardPage() {
           {/* Screenings they haven't booked */}
           {otherScreenings.length > 0 && (
             <section id="coming-up" className="mb-12 scroll-mt-24">
-              <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
-                <Film className="h-5 w-5 text-primary" />
-                {upcomingBookings.length === 0 ? "Coming Up" : "More Screenings"}
+              <h2 className="mb-6 text-4xl font-semibold uppercase leading-none tracking-tight sm:text-5xl">
+                {upcomingBookings.length === 0 ? "Coming up" : "More screenings"}{" "}
+                <span aria-hidden="true">↓</span>
               </h2>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {otherScreenings.map((showtime) => (
@@ -192,16 +195,14 @@ export default async function DashboardPage() {
 
         {/* Films they've watched: a separate band, like the home page archive */}
         {pastBookings.length > 0 && (
-          <section className="border-t border-border/50 bg-muted/30 py-16">
+          <section className="border-t-2 border-black bg-brand-yellow py-16">
             <div className="container mx-auto px-4">
               <div className="mb-8">
-                <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                  Your archive
-                </p>
-                <h2 className="font-serif text-2xl font-semibold md:text-3xl">
-                  Films You&apos;ve Watched
+                <p className="mb-2 font-mono text-sm font-bold uppercase">Your archive</p>
+                <h2 className="text-4xl font-semibold uppercase leading-none tracking-tight sm:text-5xl">
+                  Films you&apos;ve watched <span aria-hidden="true">↓</span>
                 </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-3 font-mono text-sm font-bold uppercase">
                   {pastBookings.length} {pastBookings.length === 1 ? "film" : "films"} at Embassy Cinema
                 </p>
               </div>
@@ -209,7 +210,7 @@ export default async function DashboardPage() {
                 {pastBookings.map((booking) => (
                   <div
                     key={booking.id}
-                    className="flex flex-col overflow-hidden rounded-lg border border-border/50 bg-card"
+                    className="flex flex-col overflow-hidden border-2 border-black bg-white"
                   >
                     <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted/30">
                       {booking.showtimes.image_url ? (
@@ -225,16 +226,16 @@ export default async function DashboardPage() {
                           <Film className="h-10 w-10 text-muted-foreground/50" />
                         </div>
                       )}
-                      <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-background/80 px-2.5 py-1 text-xs font-medium backdrop-blur">
-                        <Check className="h-3 w-3 text-primary" />
+                      <span className="absolute left-3 top-3 flex items-center gap-1 bg-black px-2 py-1 font-mono text-xs font-bold uppercase text-white">
+                        <Check className="h-3 w-3" />
                         Watched
                       </span>
                     </div>
                     <div className="space-y-2 p-5">
-                      <h3 className="line-clamp-1 font-serif text-lg font-medium">
+                      <h3 className="line-clamp-1 text-2xl font-semibold uppercase leading-none tracking-tight">
                         {booking.showtimes.movie_title}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-sm font-bold uppercase">
                         <span className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4 text-primary" />
                           {formatDate(booking.showtimes.showtime)}

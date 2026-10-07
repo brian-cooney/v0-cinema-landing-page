@@ -12,6 +12,7 @@ interface Showtime {
   movie_description: string
   showtime: string
   image_url: string | null
+  running_time: number | null
 }
 
 async function getShowtimes(): Promise<Showtime[]> {
@@ -37,26 +38,23 @@ export default async function AdminPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <main className="flex-1">
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <div className="mb-12">
-              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:justify-between">
-                <div className="text-center sm:text-left">
-                  <h1 className="font-serif text-4xl font-bold tracking-tight md:text-5xl">
-                    Admin Dashboard
-                  </h1>
-                  <p className="mt-2 text-muted-foreground">
-                    Manage your cinema showtimes and films
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">
-                    {user?.email}
-                  </span>
-                  <LogoutButton />
-                </div>
-              </div>
+        <section className="border-b-2 border-black bg-brand-pink px-4 pb-10 pt-32 sm:px-6 sm:pt-36">
+          <div className="container mx-auto flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="font-mono text-sm font-bold uppercase">Manage showtimes and films</p>
+              <h1 className="mt-3 text-6xl font-semibold uppercase leading-[0.9] tracking-tight sm:text-8xl">
+                Admin <span aria-hidden="true">↓</span>
+              </h1>
             </div>
+            <div className="flex items-center gap-4 font-mono text-sm font-bold uppercase">
+              <span>{user?.email}</span>
+              <LogoutButton />
+            </div>
+          </div>
+        </section>
+
+        <section className="py-12">
+          <div className="container mx-auto px-4">
 
             <div className="mx-auto max-w-4xl space-y-12">
               <div className="grid gap-8 lg:grid-cols-2">
