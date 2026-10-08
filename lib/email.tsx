@@ -10,6 +10,9 @@ function getResend() {
 }
 
 const FROM = "Embassy Cinema <bookings@embassycinema.com>"
+// Where guests' replies go. Optional: bookings@ has no inbox, so set this to an
+// address that receives mail (Vercel env var EMAIL_REPLY_TO)
+const REPLY_TO = process.env.EMAIL_REPLY_TO || undefined
 const SITE_URL = "https://www.embassycinema.com"
 const DEFAULT_RUNNING_TIME_MINUTES = 120
 
@@ -122,6 +125,18 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#39;")
 }
 
+// Copy strings may hold a little HTML (entities, <strong>); flatten them for
+// the plain-text part of the email
+function toPlainText(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, "")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+}
+
 function formatScreeningTime(showtime: string, locale: Locale) {
   const date = new Date(showtime)
   const intlLocale = dictionaries[locale].intlLocale
@@ -220,7 +235,6 @@ function emailLayout(locale: Locale, label: string, headline: string, content: s
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;800&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
       </head>
       <body style="margin: 0; padding: 0; background-color: ${BRAND.yellow};">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: ${BRAND.yellow};">
@@ -262,6 +276,24 @@ function greeting(locale: Locale, customerName: string, message: string): string
     <p style="margin: 0 0 24px 0; font-family: ${FONT_DISPLAY}; font-size: 16px; line-height: 1.5; color: #000000;">${message}</p>`
 }
 
+// Plain-text version of the film card
+function filmCardText(screening: ScreeningDetails, seatNumber: number, locale: Locale): string {
+  const t = COPY[locale]
+  const { date, time } = formatScreeningTime(screening.showtime, locale)
+  return [
+    screening.movieTitle.toUpperCase(),
+    `${t.date}: ${date}`,
+    `${t.time}: ${time}`,
+    ...(screening.runningTime ? [`${t.runningTime}: ${screening.runningTime} min`] : []),
+    `${t.seat}: ${seatLabel(seatNumber)}`,
+  ].join("\n")
+}
+
+function plainTextEmail(locale: Locale, sections: string[]): string {
+  const t = COPY[locale]
+  return [...sections, `--\n${t.footerPlace}\n${t.footerTagline}\nwww.embassycinema.com`].join("\n\n")
+}
+
 const arrivalNote = (locale: Locale) => note(COPY[locale].arrivalTitle, COPY[locale].arrivalBody, "#f0f0f0")
 
 // ICS text values must escape backslashes, commas, semicolons and newlines
@@ -286,7 +318,7 @@ function generateICSFile({ screening, seatNumber, customerName, locale }: GuestE
 VERSION:2.0
 PRODID:-//Embassy Cinema//Booking System//EN
 CALSCALE:GREGORIAN
-METHOD:REQUEST
+METHOD:PUBLISH
 BEGIN:VEVENT
 UID:${uid}
 DTSTAMP:${formatICSDateUTC(new Date())}
@@ -321,21 +353,35 @@ export function confirmationEmailHtml({ customerName, seatNumber, screening, loc
   )
 }
 
+export function confirmationEmailText({ customerName, seatNumber, screening, locale }: GuestEmailParams) {
+  const t = COPY[locale]
+  return plainTextEmail(locale, [
+    t.greeting(customerName),
+    toPlainText(t.confirmIntro),
+    filmCardText(screening, seatNumber, locale),
+    `${t.calendarTitle}: ${t.calendarBody}`,
+    `${t.arrivalTitle}: ${t.arrivalBody}`,
+    `${toPlainText(t.myBookings).replace(" →", "")}: ${SITE_URL}/dashboard`,
+  ])
+}
+
 export async function sendBookingConfirmation(params: GuestEmailParams) {
   const { to, screening, locale } = params
 
   const { data, error } = await getResend().emails.send({
     from: FROM,
     to: [to],
+    replyTo: REPLY_TO,
     subject: COPY[locale].confirmSubject(screening.movieTitle),
     attachments: [
       {
         filename: `embassy-cinema-${screening.movieTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.ics`,
         content: Buffer.from(generateICSFile(params)).toString("base64"),
-        contentType: "text/calendar",
+        contentType: "text/calendar; method=PUBLISH",
       },
     ],
     html: confirmationEmailHtml(params),
+    text: confirmationEmailText(params),
   })
 
   if (error) {
@@ -366,6 +412,7 @@ export function reminderEmail({ to, customerName, seatNumber, screening, locale 
   return {
     from: FROM,
     to: [to],
+    replyTo: REPLY_TO,
     subject: t.reminderSubject(screening.movieTitle, when),
     html: emailLayout(
       locale,
@@ -376,6 +423,14 @@ export function reminderEmail({ to, customerName, seatNumber, screening, locale 
         arrivalNote(locale) +
         note(t.cancelTitle, t.cancelBody(dashboardLink), BRAND.pink),
     ),
+    text: plainTextEmail(locale, [
+      t.greeting(customerName),
+      // Escape first so a title like "<Friends>" survives the tag stripping
+      toPlainText(t.reminderIntro(escapeHtml(screening.movieTitle), when)),
+      filmCardText(screening, seatNumber, locale),
+      `${t.arrivalTitle}: ${t.arrivalBody}`,
+      `${t.cancelTitle} ${t.cancelBody((label) => `${label} (${SITE_URL}/dashboard)`)}`,
+    ]),
   }
 }
 
