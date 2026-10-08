@@ -14,10 +14,12 @@ import {
 } from "@/components/ui/card"
 import { EmailCodeSignIn } from "@/components/email-code-sign-in"
 import { safeRedirectPath } from "@/lib/auth"
+import { useDictionary } from "@/lib/i18n/client"
 
 function UserLoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const t = useDictionary()
   const redirectTo = safeRedirectPath(searchParams.get("redirectTo"), "/dashboard")
 
   return (
@@ -26,9 +28,9 @@ function UserLoginContent() {
       <div className="w-full max-w-sm">
         <Card className="border-2 border-black bg-white shadow-[6px_6px_0_0_#000]">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-semibold uppercase leading-none tracking-tight">Sign In</CardTitle>
+            <CardTitle className="text-3xl font-semibold uppercase leading-none tracking-tight">{t.signIn.title}</CardTitle>
             <CardDescription>
-              We&apos;ll email you a sign-in code. No password needed.
+              {t.signIn.description}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -45,7 +47,7 @@ function UserLoginContent() {
         <p className="mt-4 text-center text-sm text-muted-foreground">
           <Link href="/" className="flex items-center justify-center gap-1 hover:text-foreground">
             <ArrowLeft className="h-3 w-3" />
-            Back to home
+            {t.common.backHome}
           </Link>
         </p>
       </div>

@@ -1,13 +1,8 @@
-const ITEMS = [
-  "Italy's smallest cinema",
-  "Six seats",
-  "One screen",
-  "Every Wednesday in Finalborgo",
-  "Always free",
-]
+import { getDictionary } from "@/lib/i18n/server"
 
 // Black strip of scrolling text under the hero (uses .animate-marquee)
-export function Ticker() {
+export async function Ticker() {
+  const ITEMS = (await getDictionary()).ticker
   const row = (
     <div className="flex shrink-0 items-center" aria-hidden="true">
       {ITEMS.map((item) => (

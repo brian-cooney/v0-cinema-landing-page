@@ -3,6 +3,7 @@ import Image from "next/image"
 import { Film } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { getUpcomingShowtimes } from "@/lib/showtimes"
+import { getDictionary } from "@/lib/i18n/server"
 import { CINEMA_TIME_ZONE, cn } from "@/lib/utils"
 
 interface PastShowtime {
@@ -12,9 +13,9 @@ interface PastShowtime {
   image_url: string | null
 }
 
-const formatWhen = (dateStr: string, withYear = false) =>
+const formatWhen = (locale: string, dateStr: string, withYear = false) =>
   new Date(dateStr)
-    .toLocaleString("en-GB", {
+    .toLocaleString(locale, {
       weekday: "short",
       day: "numeric",
       month: "short",
@@ -85,7 +86,7 @@ function ColumnHeading({ id, children }: { id: string; children: React.ReactNode
 
 export async function Programme() {
   const supabase = await createClient()
-  const [upcoming, { data: past }] = await Promise.all([
+  const [upcoming, { data: past }, t] = await Promise.all([
     getUpcomingShowtimes(supabase),
     supabase
       .from("showtimes")
@@ -93,12 +94,13 @@ export async function Programme() {
       .lt("showtime", new Date().toISOString())
       .order("showtime", { ascending: false })
       .limit(6),
+    getDictionary(),
   ])
 
   return (
     <section className="grid md:grid-cols-2">
       <div className="bg-brand-cyan px-4 py-10 sm:px-6">
-        <ColumnHeading id="now-showing">Now Showing</ColumnHeading>
+        <ColumnHeading id="now-showing">{t.programme.nowShowing}</ColumnHeading>
         {upcoming.length > 0 ? (
           <div className="space-y-12">
             {upcoming.map((showtime) => {
@@ -110,10 +112,8 @@ export async function Programme() {
                   imageUrl={showtime.image_url}
                   title={showtime.movie_title}
                   lines={[
-                    formatWhen(showtime.showtime),
-                    soldOut
-                      ? "Sold out"
-                      : `${showtime.seatsRemaining} ${showtime.seatsRemaining === 1 ? "seat" : "seats"} left — book →`,
+                    formatWhen(t.intlLocale, showtime.showtime),
+                    soldOut ? t.common.soldOut : t.programme.seatsLeft(showtime.seatsRemaining),
                   ]}
                 />
               )
@@ -121,13 +121,13 @@ export async function Programme() {
           </div>
         ) : (
           <div className="border-2 border-black p-8 text-center font-mono text-sm font-bold uppercase">
-            New screenings are on their way. Check back soon.
+            {t.programme.noUpcoming}
           </div>
         )}
       </div>
 
       <div className="bg-brand-yellow px-4 py-10 sm:px-6">
-        <ColumnHeading id="archive">Archive</ColumnHeading>
+        <ColumnHeading id="archive">{t.programme.archive}</ColumnHeading>
         {past && past.length > 0 ? (
           <div className="space-y-12">
             {(past as PastShowtime[]).map((showtime) => (
@@ -135,13 +135,13 @@ export async function Programme() {
                 key={showtime.id}
                 imageUrl={showtime.image_url}
                 title={showtime.movie_title}
-                lines={[`Screened ${formatWhen(showtime.showtime, true)}`]}
+                lines={[t.programme.screened(formatWhen(t.intlLocale, showtime.showtime, true))]}
               />
             ))}
           </div>
         ) : (
           <div className="border-2 border-black p-8 text-center font-mono text-sm font-bold uppercase">
-            Our first screening is coming up.
+            {t.programme.noArchive}
           </div>
         )}
       </div>

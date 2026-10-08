@@ -4,6 +4,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ShowtimeSelector } from "@/components/showtime-selector"
 import { createClient } from "@/lib/supabase/server"
+import { getDictionary } from "@/lib/i18n/server"
 import { MAX_SEATS_PER_GUEST } from "@/lib/utils"
 
 interface Showtime {
@@ -27,7 +28,7 @@ async function getShowtimes(): Promise<Showtime[]> {
 }
 
 export default async function BookPage() {
-  const showtimes = await getShowtimes()
+  const [showtimes, t] = await Promise.all([getShowtimes(), getDictionary()])
 
   return (
     <main className="flex min-h-screen flex-col bg-brand-yellow">
@@ -36,10 +37,10 @@ export default async function BookPage() {
       <section className="border-b-2 border-black bg-brand-cyan px-4 pb-10 pt-32 sm:px-6 sm:pt-36">
         <div className="mx-auto max-w-4xl">
           <p className="font-mono text-sm font-bold uppercase">
-            Free admission · Six seats · Up to {MAX_SEATS_PER_GUEST} per guest
+            {t.book.kicker(MAX_SEATS_PER_GUEST)}
           </p>
           <h1 className="mt-3 text-6xl font-semibold uppercase leading-[0.9] tracking-tight sm:text-8xl">
-            Book a seat <span aria-hidden="true">↓</span>
+            {t.book.title} <span aria-hidden="true">↓</span>
           </h1>
         </div>
       </section>

@@ -5,6 +5,8 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { X } from "lucide-react"
 import { Logo } from "@/components/logo"
+import { LanguageToggle } from "@/components/language-toggle"
+import { useDictionary } from "@/lib/i18n/client"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
@@ -20,6 +22,7 @@ export function Header({ variant = "solid" }: HeaderProps) {
   const pathname = usePathname()
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const t = useDictionary()
 
   useEffect(() => {
     const supabase = createClient()
@@ -62,9 +65,10 @@ export function Header({ variant = "solid" }: HeaderProps) {
         )}
       >
         <Logo />
-        <div className="flex items-center gap-2">
+        <div className="flex items-stretch gap-2">
+          <LanguageToggle />
           <Link href="/book" className={cn(blockButton, "hidden bg-brand-cyan sm:block")}>
-            Book
+            {t.header.book}
           </Link>
           <button
             type="button"
@@ -73,7 +77,7 @@ export function Header({ variant = "solid" }: HeaderProps) {
             aria-controls="site-menu"
             className={cn(blockButton, "bg-brand-yellow")}
           >
-            Menu
+            {t.header.menu}
           </button>
         </div>
       </header>
@@ -83,7 +87,7 @@ export function Header({ variant = "solid" }: HeaderProps) {
           id="site-menu"
           role="dialog"
           aria-modal="true"
-          aria-label="Menu"
+          aria-label={t.header.menu}
           className="fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-brand-yellow"
         >
           <div className="flex items-start justify-between p-3 sm:p-5">
@@ -94,34 +98,34 @@ export function Header({ variant = "solid" }: HeaderProps) {
               className={cn(blockButton, "flex items-center gap-1 bg-black text-white")}
               autoFocus
             >
-              Close <X className="h-6 w-6" />
+              {t.header.close} <X className="h-6 w-6" />
             </button>
           </div>
 
           <nav className="flex flex-1 flex-col justify-center px-5 pb-10 sm:px-10">
             {[
-              { href: "/#now-showing", label: "Now Showing" },
-              { href: "/book", label: "Book a Seat" },
-              { href: "/#archive", label: "Archive" },
-              { href: "/#about", label: "About" },
+              { href: "/#now-showing", label: t.header.nowShowing },
+              { href: "/book", label: t.header.bookASeat },
+              { href: "/#archive", label: t.header.archive },
+              { href: "/#about", label: t.header.about },
               user
-                ? { href: "/dashboard", label: "My Bookings" }
-                : { href: "/auth/user-login", label: "Sign In" },
+                ? { href: "/dashboard", label: t.header.myBookings }
+                : { href: "/auth/user-login", label: t.header.signIn },
             ].map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                className="border-b-2 border-black py-2 text-5xl font-semibold uppercase leading-none tracking-tight transition-colors hover:bg-black hover:text-brand-yellow sm:text-7xl"
+                className="border-b-2 border-black py-2 text-[min(3rem,11vw)] font-semibold uppercase leading-none tracking-tight transition-colors hover:bg-black hover:text-brand-yellow sm:text-7xl"
               >
                 {item.label} <span aria-hidden="true">→</span>
               </Link>
             ))}
             {user && (
               <div className="mt-6 flex flex-wrap items-center gap-4 font-mono text-sm font-bold uppercase">
-                <span>Signed in as {user.email}</span>
+                <span>{t.common.signedInAs} {user.email}</span>
                 <button type="button" onClick={handleSignOut} className="underline underline-offset-4">
-                  Sign out
+                  {t.header.signOut}
                 </button>
               </div>
             )}

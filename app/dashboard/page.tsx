@@ -9,6 +9,7 @@ import Image from "next/image"
 import { BookingCard } from "@/components/booking-card"
 import { ShowtimeCard } from "@/components/showtime-card"
 import { getUpcomingShowtimes } from "@/lib/showtimes"
+import { getDictionary } from "@/lib/i18n/server"
 import { CINEMA_TIME_ZONE, SEAT_LABELS } from "@/lib/utils"
 
 interface Showtime {
@@ -38,7 +39,7 @@ interface Booking {
 
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const [supabase, t] = await Promise.all([createClient(), getDictionary()])
   
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -92,21 +93,11 @@ export default async function DashboardPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(t.intlLocale, {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
-      timeZone: CINEMA_TIME_ZONE,
-    })
-  }
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
       timeZone: CINEMA_TIME_ZONE,
     })
   }
@@ -117,9 +108,9 @@ export default async function DashboardPage() {
       <main className="flex-1">
         <section className="border-b-2 border-black bg-brand-cyan px-4 pb-10 pt-32 sm:px-6 sm:pt-36">
           <div className="container mx-auto">
-            <p className="font-mono text-sm font-bold uppercase">Signed in as {user.email}</p>
-            <h1 className="mt-3 text-6xl font-semibold uppercase leading-[0.9] tracking-tight sm:text-8xl">
-              My bookings <span aria-hidden="true">↓</span>
+            <p className="font-mono text-sm font-bold uppercase">{t.common.signedInAs} {user.email}</p>
+            <h1 className="mt-3 text-[min(6rem,12vw)] font-semibold uppercase leading-[0.9] tracking-tight">
+              {t.dashboard.title} <span aria-hidden="true">↓</span>
             </h1>
           </div>
         </section>
@@ -131,7 +122,7 @@ export default async function DashboardPage() {
             {upcomingBookings.length > 0 && (
               <h2 className="mb-6 inline-flex items-center gap-2 bg-black px-3 py-1.5 font-mono text-sm font-bold uppercase text-white">
                 <Ticket className="h-4 w-4" />
-                Your upcoming bookings
+                {t.dashboard.upcoming}
               </h2>
             )}
             
@@ -147,18 +138,17 @@ export default async function DashboardPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
                 <div className="relative flex flex-col items-center px-6 py-16 text-center md:py-20">
                   <p className="mb-3 font-mono text-sm font-bold uppercase text-brand-yellow">
-                    Six seats · One screen · Always free
+                    {t.dashboard.emptyKicker}
                   </p>
                   <h3 className="text-4xl font-semibold uppercase leading-none tracking-tight md:text-6xl">
-                    Your seat is waiting
+                    {t.dashboard.emptyTitle}
                   </h3>
                   <p className="mt-4 max-w-md font-mono text-sm">
-                    You haven&apos;t booked a screening yet. Pick a film below and save
-                    your seat in under a minute.
+                    {t.dashboard.emptyBody}
                   </p>
                   <Button asChild size="lg" className="mt-8 bg-brand-yellow text-lg font-semibold uppercase text-black hover:bg-white">
                     <Link href={otherScreenings.length > 0 ? "#coming-up" : "/book"}>
-                      See what&apos;s on
+                      {t.dashboard.seeWhatsOn}
                     </Link>
                   </Button>
                 </div>
@@ -180,7 +170,7 @@ export default async function DashboardPage() {
           {otherScreenings.length > 0 && (
             <section id="coming-up" className="mb-12 scroll-mt-24">
               <h2 className="mb-6 text-4xl font-semibold uppercase leading-none tracking-tight sm:text-5xl">
-                {upcomingBookings.length === 0 ? "Coming up" : "More screenings"}{" "}
+                {upcomingBookings.length === 0 ? t.dashboard.comingUp : t.dashboard.moreScreenings}{" "}
                 <span aria-hidden="true">↓</span>
               </h2>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -198,12 +188,12 @@ export default async function DashboardPage() {
           <section className="border-t-2 border-black bg-brand-yellow py-16">
             <div className="container mx-auto px-4">
               <div className="mb-8">
-                <p className="mb-2 font-mono text-sm font-bold uppercase">Your archive</p>
+                <p className="mb-2 font-mono text-sm font-bold uppercase">{t.dashboard.yourArchive}</p>
                 <h2 className="text-4xl font-semibold uppercase leading-none tracking-tight sm:text-5xl">
-                  Films you&apos;ve watched <span aria-hidden="true">↓</span>
+                  {t.dashboard.filmsWatched} <span aria-hidden="true">↓</span>
                 </h2>
                 <p className="mt-3 font-mono text-sm font-bold uppercase">
-                  {pastBookings.length} {pastBookings.length === 1 ? "film" : "films"} at Embassy Cinema
+                  {t.dashboard.filmCount(pastBookings.length)}
                 </p>
               </div>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -228,7 +218,7 @@ export default async function DashboardPage() {
                       )}
                       <span className="absolute left-3 top-3 flex items-center gap-1 bg-black px-2 py-1 font-mono text-xs font-bold uppercase text-white">
                         <Check className="h-3 w-3" />
-                        Watched
+                        {t.dashboard.watched}
                       </span>
                     </div>
                     <div className="space-y-2 p-5">
@@ -242,7 +232,7 @@ export default async function DashboardPage() {
                         </span>
                         <span className="flex items-center gap-1.5">
                           <MapPin className="h-4 w-4 text-primary" />
-                          Seat {SEAT_LABELS[booking.seat_number - 1]}
+                          {t.common.seat(SEAT_LABELS[booking.seat_number - 1])}
                         </span>
                       </div>
                     </div>

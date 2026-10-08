@@ -6,7 +6,8 @@ import Image from "next/image"
 import { Calendar, Clock, Film, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SeatSelector } from "@/components/seat-selector"
-import { formatRunningTime } from "@/lib/utils"
+import { useDictionary } from "@/lib/i18n/client"
+import { CINEMA_TIME_ZONE, formatRunningTime } from "@/lib/utils"
 
 interface Showtime {
   id: string
@@ -23,6 +24,7 @@ interface ShowtimeSelectorProps {
 
 export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
   const searchParams = useSearchParams()
+  const t = useDictionary()
   const preselectedId = searchParams.get("showtime")
   const [selectedShowtime, setSelectedShowtime] = useState<Showtime | null>(
     null
@@ -37,21 +39,21 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(t.intlLocale, {
       weekday: "long",
       month: "long",
       day: "numeric",
-      timeZone: "Europe/Rome",
+      timeZone: CINEMA_TIME_ZONE,
     })
   }
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr)
-    return date.toLocaleTimeString("en-GB", {
+    return date.toLocaleTimeString(t.intlLocale, {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
-      timeZone: "Europe/Rome",
+      timeZone: CINEMA_TIME_ZONE,
     })
   }
 
@@ -93,7 +95,7 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
             )}
             <div className="flex flex-1 items-start justify-between gap-4 p-6">
               <div>
-                <p className="mb-2 w-fit bg-black px-2 py-0.5 font-mono text-xs font-bold uppercase text-white">Your film</p>
+                <p className="mb-2 w-fit bg-black px-2 py-0.5 font-mono text-xs font-bold uppercase text-white">{t.book.yourFilm}</p>
                 <h3 className="text-3xl font-semibold uppercase leading-none tracking-tight">
                   {selectedShowtime.movie_title}
                 </h3>
@@ -123,14 +125,14 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
                 className="border-2 font-mono font-bold uppercase hover:bg-brand-yellow"
                 onClick={() => setSelectedShowtime(null)}
               >
-                Change
+                {t.book.change}
               </Button>
             </div>
           </div>
         </div>
 
         <h2 className="text-center text-4xl font-semibold uppercase leading-none tracking-tight sm:text-5xl">
-          Pick your seat <span aria-hidden="true">↓</span>
+          {t.book.pickYourSeat} <span aria-hidden="true">↓</span>
         </h2>
         <SeatSelector showtimeId={selectedShowtime.id} />
       </div>
@@ -141,9 +143,9 @@ export function ShowtimeSelector({ showtimes }: ShowtimeSelectorProps) {
     return (
       <div className="border-2 border-black bg-white p-12 text-center shadow-[6px_6px_0_0_#000]">
         <Film className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-        <h3 className="text-3xl font-semibold uppercase leading-none tracking-tight">No upcoming shows</h3>
+        <h3 className="text-3xl font-semibold uppercase leading-none tracking-tight">{t.book.noShowsTitle}</h3>
         <p className="mt-2 text-muted-foreground">
-          Check back soon for new screenings!
+          {t.book.noShowsBody}
         </p>
       </div>
     )

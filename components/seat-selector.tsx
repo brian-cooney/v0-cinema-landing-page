@@ -12,6 +12,7 @@ import { bookSeat } from "@/app/actions"
 import { EmailCodeSignIn } from "@/components/email-code-sign-in"
 import { cn, MAX_SEATS_PER_GUEST, SEAT_LABELS } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
+import { useDictionary } from "@/lib/i18n/client"
 import type { User } from "@supabase/supabase-js"
 
 interface Booking {
@@ -127,6 +128,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const t = useDictionary()
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null)
   const [name, setName] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -243,7 +245,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
       if (result.error) {
         setError(result.error)
         // If seat was taken, refresh bookings and clear selection
-        if (result.error.toLowerCase().includes("already been booked")) {
+        if (result.seatTaken) {
           setSelectedSeat(null)
           mutate(`/api/bookings?showtimeId=${showtimeId}`)
         }
@@ -254,7 +256,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
         setTimeout(() => setShowConfetti(false), 4000)
       }
     } catch {
-      setError("Something went wrong. Please try again.")
+      setError(t.seats.genericError)
     } finally {
       setIsSubmitting(false)
     }
@@ -267,18 +269,17 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
         <div className="mx-auto max-w-md border-2 border-black bg-white p-8 text-center shadow-[6px_6px_0_0_#000]">
         <CheckCircle2 className="mx-auto mb-4 h-16 w-16" />
         <h3 className="text-3xl font-semibold uppercase leading-none tracking-tight">
-          You&apos;re booked!
+          {t.seats.successTitle}
         </h3>
         <p className="mt-2 text-muted-foreground">
-          Your seat {SEAT_LABELS[selectedSeat! - 1]} has been reserved. A
-          confirmation has been sent to {user?.email}.
+          {t.seats.successBody(SEAT_LABELS[selectedSeat! - 1], user?.email ?? "")}
         </p>
         <p className="mt-4 text-sm text-muted-foreground">
-          Remember: All screenings are free. Just show up and enjoy the film!
+          {t.seats.successFree}
         </p>
         {reachedLimit ? (
           <p className="mt-6 text-sm text-muted-foreground">
-            That&apos;s the maximum of {MAX_SEATS_PER_GUEST} seats per guest for this screening.
+            {t.seats.successLimit(MAX_SEATS_PER_GUEST)}
           </p>
         ) : (
           <Button
@@ -289,7 +290,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
               setName("")
             }}
           >
-            Book Another Seat
+            {t.seats.bookAnother}
           </Button>
         )}
       </div>
@@ -301,7 +302,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
     <div className="space-y-8">
       {/* Screen */}
       <div className="mx-auto max-w-xs bg-black py-1.5 text-center font-mono text-xs font-bold uppercase tracking-[0.3em] text-white">
-        Screen
+        {t.seats.screen}
       </div>
 
       {/* Seats: two rows of three */}
@@ -328,7 +329,7 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
                           ? "bg-black text-white shadow-[4px_4px_0_0_#000]"
                           : "bg-white hover:-translate-y-0.5 hover:bg-brand-cyan",
                     )}
-                    aria-label={`Seat ${SEAT_LABELS[seatNum - 1]}${isBooked ? ` (booked by ${bookingsMap.get(seatNum)})` : ""}`}
+                    aria-label={t.seats.seatLabel(SEAT_LABELS[seatNum - 1], isBooked ? bookingsMap.get(seatNum) : undefined)}
                   >
                     <span className="text-lg font-semibold">{SEAT_LABELS[seatNum - 1]}</span>
                     {isBooked && (
@@ -347,9 +348,9 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
       {/* Legend */}
       <div className="flex justify-center gap-5 font-mono text-xs font-bold uppercase">
         {[
-          { label: "Available", swatch: "bg-white" },
-          { label: "Your pick", swatch: "bg-black" },
-          { label: "Taken", swatch: "bg-brand-pink" },
+          { label: t.seats.available, swatch: "bg-white" },
+          { label: t.seats.yourPick, swatch: "bg-black" },
+          { label: t.seats.taken, swatch: "bg-brand-pink" },
         ].map(({ label, swatch }) => (
           <span key={label} className="flex items-center gap-2">
             <span className={cn("h-4 w-4 border-2 border-black", swatch)} />
@@ -364,52 +365,51 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
           ref={bookingPanelRef}
           className="mx-auto w-full max-w-md scroll-mt-28 border-2 border-black bg-white p-6 shadow-[6px_6px_0_0_#000]"
         >
-          <h3 className="text-2xl font-semibold uppercase leading-none tracking-tight">Complete your booking</h3>
+          <h3 className="text-2xl font-semibold uppercase leading-none tracking-tight">{t.seats.completeTitle}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Seat{" "}
+            {t.common.seat("")}
             <span className="font-semibold text-primary">{SEAT_LABELS[selectedSeat - 1]}</span>
-            {" "}· free admission · up to {MAX_SEATS_PER_GUEST} seats per guest
+            {" "}{t.seats.summary(MAX_SEATS_PER_GUEST)}
           </p>
 
           <ol className="mt-6 space-y-6">
-            <BookingStep number={1} title="Verify your email" done={!!user}>
+            <BookingStep number={1} title={t.seats.verifyEmail} done={!!user}>
               {isCheckingAuth ? (
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               ) : user ? (
                 <p className="text-sm text-muted-foreground">
-                  Signed in as <span className="font-medium text-foreground">{user.email}</span>
+                  {t.common.signedInAs} <span className="font-medium text-foreground">{user.email}</span>
                 </p>
               ) : (
                 <EmailCodeSignIn redirectTo={bookingPath} onSignedIn={() => router.refresh()} />
               )}
             </BookingStep>
 
-            <BookingStep number={2} title="Confirm your seat" disabled={!user}>
+            <BookingStep number={2} title={t.seats.confirmSeat} disabled={!user}>
               {user && reachedLimit ? (
                 <p className="text-sm text-muted-foreground">
-                  You&apos;ve already booked {MAX_SEATS_PER_GUEST} seats for this screening, the
-                  maximum per guest. You can change or cancel them in{" "}
+                  {t.seats.limitReached(MAX_SEATS_PER_GUEST)}{" "}
                   <Link href="/dashboard" className="text-primary underline underline-offset-2">
-                    My Bookings
+                    {t.header.myBookings}
                   </Link>
                   .
                 </p>
               ) : user && (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Your name</Label>
+                    <Label htmlFor="name">{t.seats.yourName}</Label>
                     <Input
                       ref={nameInputRef}
                       id="name"
                       type="text"
                       autoComplete="name"
-                      placeholder="Enter your name"
+                      placeholder={t.seats.namePlaceholder}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      We&apos;ll give this name at the door. No ticket needed.
+                      {t.seats.nameHint}
                     </p>
                   </div>
 
@@ -423,8 +423,8 @@ export function SeatSelector({ showtimeId }: SeatSelectorProps) {
                   >
                     {isSubmitting && <Loader2 className="animate-spin" />}
                     {isSubmitting
-                      ? "Booking..."
-                      : `Confirm seat ${SEAT_LABELS[selectedSeat - 1]}`}
+                      ? t.seats.booking
+                      : t.seats.confirmButton(SEAT_LABELS[selectedSeat - 1])}
                   </Button>
                 </form>
               )}

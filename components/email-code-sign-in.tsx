@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useDictionary } from "@/lib/i18n/client"
 
 interface EmailCodeSignInProps {
   // Where the link in the email should land (a same-site path)
@@ -19,6 +20,7 @@ interface EmailCodeSignInProps {
 // link as a fallback) and they type the code here. Email links always open a
 // new tab, so the code keeps them in the tab where they picked their seat.
 export function EmailCodeSignIn({ redirectTo, onSignedIn, autoFocus }: EmailCodeSignInProps) {
+  const t = useDictionary().signIn
   const [email, setEmail] = useState("")
   const [code, setCode] = useState("")
   const [codeSent, setCodeSent] = useState(false)
@@ -42,7 +44,7 @@ export function EmailCodeSignIn({ redirectTo, onSignedIn, autoFocus }: EmailCode
 
     setIsLoading(false)
     if (error) {
-      setError(error.message)
+      setError(t.sendFailed(error.message))
     } else {
       setCodeSent(true)
     }
@@ -62,7 +64,7 @@ export function EmailCodeSignIn({ redirectTo, onSignedIn, autoFocus }: EmailCode
 
     setIsLoading(false)
     if (error) {
-      setError("That code didn't work. Check the latest email and try again.")
+      setError(t.badCode)
     } else {
       onSignedIn()
     }
@@ -72,12 +74,12 @@ export function EmailCodeSignIn({ redirectTo, onSignedIn, autoFocus }: EmailCode
     return (
       <form onSubmit={sendCode} className="space-y-3">
         <div className="space-y-2">
-          <Label htmlFor="signin-email">Email address</Label>
+          <Label htmlFor="signin-email">{t.emailLabel}</Label>
           <Input
             id="signin-email"
             type="email"
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder={t.emailPlaceholder}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoFocus={autoFocus}
@@ -87,7 +89,7 @@ export function EmailCodeSignIn({ redirectTo, onSignedIn, autoFocus }: EmailCode
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={isLoading || !email.trim()}>
           {isLoading ? <Loader2 className="animate-spin" /> : <Mail />}
-          {isLoading ? "Sending..." : "Email me a sign-in code"}
+          {isLoading ? t.sending : t.sendCode}
         </Button>
       </form>
     )
@@ -96,11 +98,11 @@ export function EmailCodeSignIn({ redirectTo, onSignedIn, autoFocus }: EmailCode
   return (
     <form onSubmit={verifyCode} className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        We sent a code to <span className="font-medium text-foreground">{email}</span>.
-        Enter it below to continue here.
+        {t.codeSent} <span className="font-medium text-foreground">{email}</span>
+        {t.codeSentAfter}
       </p>
       <div className="space-y-2">
-        <Label htmlFor="signin-code">Sign-in code</Label>
+        <Label htmlFor="signin-code">{t.codeLabel}</Label>
         <Input
           id="signin-code"
           inputMode="numeric"
@@ -117,10 +119,10 @@ export function EmailCodeSignIn({ redirectTo, onSignedIn, autoFocus }: EmailCode
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" className="w-full" disabled={isLoading || code.length < 6}>
         {isLoading && <Loader2 className="animate-spin" />}
-        {isLoading ? "Checking..." : "Continue"}
+        {isLoading ? t.checking : t.continue}
       </Button>
       <p className="text-xs text-muted-foreground">
-        You can also tap the link in the email instead.{" "}
+        {t.linkHint}{" "}
         <button
           type="button"
           className="underline underline-offset-2 hover:text-foreground"
@@ -130,7 +132,7 @@ export function EmailCodeSignIn({ redirectTo, onSignedIn, autoFocus }: EmailCode
             setError(null)
           }}
         >
-          Use a different email
+          {t.differentEmail}
         </button>
       </p>
     </form>
