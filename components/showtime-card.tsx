@@ -4,17 +4,18 @@ import { Calendar, Clock, Film, Users, Timer } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { CINEMA_TIME_ZONE, cn, formatRunningTime } from "@/lib/utils"
 import type { UpcomingShowtime } from "@/lib/showtimes"
+import { getDictionary } from "@/lib/i18n/server"
 
-const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString("en-US", {
+const formatDate = (locale: string, dateStr: string) =>
+  new Date(dateStr).toLocaleDateString(locale, {
     weekday: "short",
     month: "short",
     day: "numeric",
     timeZone: CINEMA_TIME_ZONE,
   })
 
-const formatTime = (dateStr: string) =>
-  new Date(dateStr).toLocaleTimeString("en-GB", {
+const formatTime = (locale: string, dateStr: string) =>
+  new Date(dateStr).toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -23,7 +24,8 @@ const formatTime = (dateStr: string) =>
 
 // Poster card for an upcoming screening. The whole card links to booking,
 // unless it's sold out.
-export function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
+export async function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
+  const t = await getDictionary()
   const { seatsRemaining } = showtime
   const isSoldOut = seatsRemaining <= 0
 
@@ -54,11 +56,11 @@ export function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
         <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-sm font-bold uppercase">
           <span className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4 text-primary" />
-            {formatDate(showtime.showtime)}
+            {formatDate(t.intlLocale, showtime.showtime)}
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="h-4 w-4 text-primary" />
-            {formatTime(showtime.showtime)}
+            {formatTime(t.intlLocale, showtime.showtime)}
           </span>
           {showtime.running_time && (
             <span className="flex items-center gap-1.5">
@@ -70,11 +72,9 @@ export function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
         <div className="mb-4 flex items-center gap-1.5 font-mono text-sm font-bold uppercase">
           <Users className="h-4 w-4 text-primary" />
           {isSoldOut ? (
-            <span className="font-medium text-destructive">No seats available</span>
+            <span className="font-medium text-destructive">{t.showtimeCard.noSeats}</span>
           ) : (
-            <span>
-              {seatsRemaining} {seatsRemaining === 1 ? "seat" : "seats"} remaining
-            </span>
+            <span>{t.showtimeCard.seatsRemaining(seatsRemaining)}</span>
           )}
         </div>
         {/* The whole card is the link, so this only looks like a button */}
@@ -87,7 +87,7 @@ export function ShowtimeCard({ showtime }: { showtime: UpcomingShowtime }) {
               : "group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground",
           )}
         >
-          {isSoldOut ? "Sold Out" : "Reserve Seats"}
+          {isSoldOut ? t.common.soldOut : t.showtimeCard.reserve}
         </span>
       </div>
     </>

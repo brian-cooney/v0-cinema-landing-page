@@ -9,8 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { getDictionary } from "@/lib/i18n/server"
 
-export default function AuthErrorPage() {
+export default async function AuthErrorPage() {
+  const t = await getDictionary()
+
   return (
     <div className="flex min-h-svh w-full flex-col items-center justify-center bg-brand-cyan p-6">
       <Logo className="mb-8" />
@@ -20,17 +23,17 @@ export default function AuthErrorPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
               <AlertCircle className="h-8 w-8 text-destructive" />
             </div>
-            <CardTitle className="text-3xl font-semibold uppercase leading-none tracking-tight">Authentication Error</CardTitle>
+            <CardTitle className="text-3xl font-semibold uppercase leading-none tracking-tight">{t.signIn.errorTitle}</CardTitle>
             <CardDescription className="mt-2">
-              Something went wrong during sign in. The link may have expired or already been used.
+              {t.signIn.errorBody}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Button asChild className="w-full">
-              <Link href="/auth/user-login">Try Again</Link>
+              <Link href="/auth/user-login">{t.signIn.tryAgain}</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link href="/">Back to Home</Link>
+              <Link href="/">{t.common.backHome}</Link>
             </Button>
           </CardContent>
         </Card>

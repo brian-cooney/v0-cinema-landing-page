@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Calendar, Clock, MapPin, Trash2, Loader2 } from "lucide-react"
 import { cancelBooking } from "@/app/actions"
+import { useDictionary } from "@/lib/i18n/client"
 import { CINEMA_TIME_ZONE } from "@/lib/utils"
 
 interface Showtime {
@@ -43,12 +44,13 @@ interface BookingCardProps {
 
 export function BookingCard({ booking, seatLabels }: BookingCardProps) {
   const router = useRouter()
+  const t = useDictionary()
   const [isCancelling, setIsCancelling] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(t.intlLocale, {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -59,7 +61,7 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleTimeString("en-GB", {
+    return date.toLocaleTimeString(t.intlLocale, {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
@@ -123,10 +125,10 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
         </div>
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-4 w-4 text-muted-foreground" />
-          <span>Seat {seatLabels[booking.seat_number - 1]}</span>
+          <span>{t.common.seat(seatLabels[booking.seat_number - 1])}</span>
         </div>
         <div className="mt-4 border-2 border-black bg-brand-yellow p-3 text-center">
-          <p className="text-xs font-medium">Booked for</p>
+          <p className="text-xs font-medium">{t.bookingCard.bookedFor}</p>
           <p className="font-bold normal-case">{booking.customer_name}</p>
         </div>
 
@@ -143,20 +145,20 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
                 ) : (
                   <Trash2 className="mr-2 h-4 w-4" />
                 )}
-                Cancel Booking
+                {t.bookingCard.cancel}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
+                <AlertDialogTitle>{t.bookingCard.cancel}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to cancel your booking for{" "}
-                  <strong>{booking.showtimes.movie_title}</strong>? This action
-                  cannot be undone.
+                  {t.bookingCard.confirmBefore}{" "}
+                  <strong>{booking.showtimes.movie_title}</strong>
+                  {t.bookingCard.confirmAfter}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                <AlertDialogCancel>{t.bookingCard.keep}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleCancel}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -164,7 +166,7 @@ export function BookingCard({ booking, seatLabels }: BookingCardProps) {
                   {isCancelling ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
-                  Cancel Booking
+                  {t.bookingCard.cancel}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

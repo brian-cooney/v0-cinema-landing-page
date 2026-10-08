@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { sendBookingConfirmation, type ScreeningDetails } from "@/lib/email"
 import { isAdmin } from "@/lib/auth"
+import { getDictionary } from "@/lib/i18n/server"
 import { MAX_SEATS_PER_GUEST } from "@/lib/utils"
 
 const NOT_ADMIN = "You must be an admin to do that."
@@ -13,8 +14,6 @@ const SEAT_TAKEN = "This seat has already been booked. Please choose another sea
 function isSeatTakenError(error: { code?: string } | null) {
   return error?.code === "23505"
 }
-
-const LIMIT_REACHED = `You can book up to ${MAX_SEATS_PER_GUEST} seats per screening.`
 
 // Raised by the bookings_enforce_limit trigger (scripts/007)
 function isLimitError(error: { message?: string } | null) {
@@ -51,18 +50,18 @@ export async function bookSeat({
   seatNumber,
   customerName,
 }: BookSeatParams) {
-  const supabase = await createClient()
+  const [supabase, { errors }] = await Promise.all([createClient(), getDictionary()])
 
   // Take the guest's identity from their session, never from the client
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user?.email) {
-    return { error: "You must be signed in to book a seat" }
+    return { error: errors.signInToBook }
   }
 
   // Validate seat number
   if (seatNumber < 1 || seatNumber > 6) {
-    return { error: "Invalid seat number" }
+    return { error: errors.invalidSeat }
   }
 
   // Friendly early check; the database trigger is what actually enforces it
@@ -73,7 +72,7 @@ export async function bookSeat({
     .eq("user_id", user.id)
 
   if ((count ?? 0) >= MAX_SEATS_PER_GUEST) {
-    return { error: LIMIT_REACHED }
+    return { error: errors.limitReached(MAX_SEATS_PER_GUEST) }
   }
 
   const screening = await getScreeningDetails(supabase, showtimeId)
@@ -91,13 +90,13 @@ export async function bookSeat({
     .single()
 
   if (isSeatTakenError(error)) {
-    return { error: SEAT_TAKEN }
+    return { error: errors.seatTaken, seatTaken: true }
   }
   if (isLimitError(error)) {
-    return { error: LIMIT_REACHED }
+    return { error: errors.limitReached(MAX_SEATS_PER_GUEST) }
   }
   if (error) {
-    return { error: "Failed to create booking. Please try again." }
+    return { error: errors.bookFailed }
   }
 
   // Send confirmation email
@@ -311,13 +310,13 @@ export async function getShowtimeBookings(showtimeId: string) {
 // User booking management
 
 export async function cancelBooking(bookingId: string) {
-  const supabase = await createClient()
+  const [supabase, { errors }] = await Promise.all([createClient(), getDictionary()])
 
   // Get the current user
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    return { error: "You must be logged in to cancel a booking" }
+    return { error: errors.signInToCancel }
   }
 
   // Verify the booking belongs to this user
@@ -328,11 +327,11 @@ export async function cancelBooking(bookingId: string) {
     .single()
 
   if (!booking) {
-    return { error: "Booking not found" }
+    return { error: errors.bookingNotFound }
   }
 
   if (booking.user_id !== user.id) {
-    return { error: "You can only cancel your own bookings" }
+    return { error: errors.notYourBooking }
   }
 
   // Check if the showtime is in the future
@@ -343,7 +342,7 @@ export async function cancelBooking(bookingId: string) {
     .single()
 
   if (showtime && new Date(showtime.showtime) <= new Date()) {
-    return { error: "Cannot cancel bookings for past screenings" }
+    return { error: errors.pastScreening }
   }
 
   // Delete the booking
@@ -353,7 +352,7 @@ export async function cancelBooking(bookingId: string) {
     .eq("id", bookingId)
 
   if (error) {
-    return { error: "Failed to cancel booking. Please try again." }
+    return { error: errors.cancelFailed }
   }
 
   return { success: true }
