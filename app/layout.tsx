@@ -29,15 +29,6 @@ export const metadata: Metadata = {
     description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films. Free bookings available.',
     siteName: 'Embassy Cinema',
     url: 'https://www.embassycinema.com',
-    images: [
-      {
-        url: 'https://www.embassycinema.com/hero-cinema.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Embassy Cinema - An intimate art deco cinema experience',
-        type: 'image/webp',
-      },
-    ],
     locale: 'en_US',
     type: 'website',
   },
@@ -45,22 +36,11 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Embassy Cinema | Intimate Film Experience',
     description: 'Experience cinema the way it was meant to be. Just 6 seats, one screen, and unforgettable films. Free bookings available.',
-    images: ['https://www.embassycinema.com/hero-cinema.webp'],
   },
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-32x32.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: '/apple-icon.png',
   },
