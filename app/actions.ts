@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { sendBookingConfirmation, type ScreeningDetails } from "@/lib/email"
 import { isAdmin } from "@/lib/auth"
-import { getDictionary } from "@/lib/i18n/server"
+import { getDictionary, getLocale } from "@/lib/i18n/server"
+import { DEFAULT_LOCALE } from "@/lib/i18n/config"
 import { MAX_SEATS_PER_GUEST } from "@/lib/utils"
 
 const NOT_ADMIN = "You must be an admin to do that."
@@ -50,7 +51,7 @@ export async function bookSeat({
   seatNumber,
   customerName,
 }: BookSeatParams) {
-  const [supabase, { errors }] = await Promise.all([createClient(), getDictionary()])
+  const [supabase, { errors }, locale] = await Promise.all([createClient(), getDictionary(), getLocale()])
 
   // Take the guest's identity from their session, never from the client
   const { data: { user } } = await supabase.auth.getUser()
@@ -85,6 +86,8 @@ export async function bookSeat({
       customer_name: customerName,
       customer_email: user.email,
       user_id: user.id,
+      // So the reminder email goes out in the language they booked in
+      locale,
     })
     .select()
     .single()
@@ -101,7 +104,7 @@ export async function bookSeat({
 
   // Send confirmation email
   if (screening) {
-    await sendBookingConfirmation({ to: user.email, customerName, seatNumber, screening })
+    await sendBookingConfirmation({ to: user.email, customerName, seatNumber, screening, locale })
   }
 
   return { success: true, booking: data }
@@ -262,7 +265,8 @@ export async function adminBookSeat({
 
   // Send confirmation email if requested
   if (sendEmail && screening) {
-    await sendBookingConfirmation({ to: customerEmail, customerName, seatNumber, screening })
+    // We don't know the guest's language here, and the booking keeps locale NULL
+    await sendBookingConfirmation({ to: customerEmail, customerName, seatNumber, screening, locale: DEFAULT_LOCALE })
   }
 
   return { success: true, booking: data }

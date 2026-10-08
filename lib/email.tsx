@@ -1,5 +1,7 @@
 import { Resend } from "resend"
 import { CINEMA_TIME_ZONE, SEAT_LABELS } from "@/lib/utils"
+import { dictionaries } from "@/lib/i18n/dictionaries"
+import type { Locale } from "@/lib/i18n/config"
 
 // Created on first send rather than at import, so building the app (which loads
 // routes that import this file) doesn't need the API key
@@ -23,7 +25,91 @@ interface GuestEmailParams {
   customerName: string
   seatNumber: number
   screening: ScreeningDetails
+  locale: Locale
 }
+
+// Every string in the guest emails, per language. Values marked as HTML are
+// inserted as is, so anything typed by people must be escaped before it goes in.
+const en = {
+  footerPlace: "Embassy Cinema · Finalborgo, Italy",
+  footerTagline: "Six seats · One screen · Always free",
+  greeting: (name: string) => `Hello ${name},`,
+  date: "Date",
+  time: "Time",
+  runningTime: "Running time",
+  seat: "Seat",
+  arrivalTitle: "At the door",
+  arrivalBody:
+    "Please arrive at least 10 minutes before the screening. No ticket needed, just give your name at the door.",
+
+  confirmSubject: (title: string) => `Booking Confirmed: ${title} at Embassy Cinema`,
+  confirmLabel: "Booking confirmed",
+  confirmHeadline: "You&#39;re booked!",
+  confirmIntro: "Thanks for your reservation. Your seat is confirmed for:",
+  calendarTitle: "Add to calendar",
+  calendarBody:
+    "We've attached a calendar invite to this email. Open the .ics file to add the screening to your calendar with a reminder.",
+  myBookings: "My bookings →",
+
+  // Calendar invite text: keep commas and semicolons out (ICS separators)
+  icsSummary: (title: string) => `${title} at Embassy Cinema`,
+  icsDescription: (title: string, seat: string) =>
+    `Your booking confirmation for ${title}.\\n\\nSeat: ${seat}\\nPlease arrive 10 minutes early. No ticket required - just give your name at the door.`,
+  icsAlarm: (title: string) => `Reminder: ${title} at Embassy Cinema in 1 hour`,
+
+  today: "today",
+  tomorrow: "tomorrow",
+  onDate: (date: string) => `on ${date}`,
+  when: (day: string, time: string) => `${day} at ${time}`,
+  reminderSubject: (title: string, when: string) => `Reminder: ${title} ${when} at Embassy Cinema`,
+  reminderLabel: "Screening reminder",
+  reminderHeadline: (day: string) => `See you ${day}`,
+  reminderIntro: (titleHtml: string, when: string) =>
+    `Just a reminder that you're booked for <strong>${titleHtml}</strong> ${when}.`,
+  cancelTitle: "Can't make it?",
+  cancelBody: (link: (label: string) => string) =>
+    `Please ${link("cancel your booking")} so someone else can have your seat.`,
+}
+
+const it: typeof en = {
+  footerPlace: "Embassy Cinema · Finalborgo, Italia",
+  footerTagline: "Sei posti · Uno schermo · Sempre gratis",
+  greeting: (name) => `Ciao ${name},`,
+  date: "Data",
+  time: "Ora",
+  runningTime: "Durata",
+  seat: "Posto",
+  arrivalTitle: "All'ingresso",
+  arrivalBody:
+    "Ti chiediamo di arrivare almeno 10 minuti prima della proiezione. Non serve il biglietto: basta dire il tuo nome all'ingresso.",
+
+  confirmSubject: (title) => `Prenotazione confermata: ${title} all'Embassy Cinema`,
+  confirmLabel: "Prenotazione confermata",
+  confirmHeadline: "Posto prenotato!",
+  confirmIntro: "Grazie per la prenotazione. Il tuo posto è confermato per:",
+  calendarTitle: "Aggiungi al calendario",
+  calendarBody:
+    "In allegato trovi un invito per il calendario. Apri il file .ics per aggiungere la proiezione al tuo calendario con un promemoria.",
+  myBookings: "Le mie prenotazioni →",
+
+  icsSummary: (title) => `${title} all'Embassy Cinema`,
+  icsDescription: (title, seat) =>
+    `Conferma della prenotazione per ${title}.\\n\\nPosto: ${seat}\\nArriva 10 minuti prima. Non serve il biglietto: basta dire il tuo nome all'ingresso.`,
+  icsAlarm: (title) => `Promemoria: ${title} all'Embassy Cinema tra 1 ora`,
+
+  today: "oggi",
+  tomorrow: "domani",
+  onDate: (date) => date,
+  when: (day, time) => `${day} alle ${time}`,
+  reminderSubject: (title, when) => `Promemoria: ${title} ${when} all'Embassy Cinema`,
+  reminderLabel: "Promemoria proiezione",
+  reminderHeadline: (day) => `Ci vediamo ${day}`,
+  reminderIntro: (titleHtml, when) => `Ti ricordiamo che hai prenotato <strong>${titleHtml}</strong> per ${when}.`,
+  cancelTitle: "Non puoi venire?",
+  cancelBody: (link) => `Ti chiediamo di ${link("annullare la prenotazione")}, così qualcun altro potrà avere il tuo posto.`,
+}
+
+const COPY: Record<Locale, typeof en> = { en, it }
 
 // Guest names and film titles are typed by people, so escape them before
 // putting them in HTML
@@ -36,16 +122,17 @@ function escapeHtml(text: string): string {
     .replace(/'/g, "&#39;")
 }
 
-function formatScreeningTime(showtime: string) {
+function formatScreeningTime(showtime: string, locale: Locale) {
   const date = new Date(showtime)
+  const intlLocale = dictionaries[locale].intlLocale
   return {
-    date: date.toLocaleDateString("en-GB", {
+    date: date.toLocaleDateString(intlLocale, {
       weekday: "long",
       day: "numeric",
       month: "long",
       timeZone: CINEMA_TIME_ZONE,
     }),
-    time: date.toLocaleTimeString("en-GB", {
+    time: date.toLocaleTimeString(intlLocale, {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
@@ -66,8 +153,9 @@ const FONT_MONO = "'IBM Plex Mono', 'Courier New', Courier, monospace"
 const FONT_LOGO = "Georgia, 'Times New Roman', serif"
 
 // The film card shared by every guest email: poster, title, date, time, seat
-function filmCard(screening: ScreeningDetails, seatNumber: number): string {
-  const { date, time } = formatScreeningTime(screening.showtime)
+function filmCard(screening: ScreeningDetails, seatNumber: number, locale: Locale): string {
+  const t = COPY[locale]
+  const { date, time } = formatScreeningTime(screening.showtime, locale)
   const title = escapeHtml(screening.movieTitle)
 
   const poster = screening.imageUrl
@@ -89,10 +177,10 @@ function filmCard(screening: ScreeningDetails, seatNumber: number): string {
         <td style="padding: 20px;">
           <p style="margin: 0 0 12px 0; font-family: ${FONT_DISPLAY}; font-size: 26px; font-weight: 800; line-height: 1; text-transform: uppercase; color: #000000;">${title}</p>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-            ${row("Date", date)}
-            ${row("Time", time)}
-            ${screening.runningTime ? row("Running time", `${screening.runningTime} min`) : ""}
-            ${row("Seat", seatLabel(seatNumber), true)}
+            ${row(t.date, date)}
+            ${row(t.time, time)}
+            ${screening.runningTime ? row(t.runningTime, `${screening.runningTime} min`) : ""}
+            ${row(t.seat, seatLabel(seatNumber), true)}
           </table>
         </td>
       </tr>
@@ -124,10 +212,11 @@ function button(href: string, label: string): string {
 }
 
 // Yellow page, white card with a black border, logo stamp, label and headline
-function emailLayout(label: string, headline: string, content: string): string {
+function emailLayout(locale: Locale, label: string, headline: string, content: string): string {
+  const t = COPY[locale]
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${locale}">
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,8 +243,8 @@ function emailLayout(label: string, headline: string, content: string): string {
                 </tr>
                 <tr>
                   <td style="background-color: #000000; padding: 18px 28px; font-family: ${FONT_MONO}; font-size: 12px; line-height: 1.6; text-transform: uppercase; color: #ffffff;">
-                    Embassy Cinema · Finalborgo, Italy<br>
-                    Six seats · One screen · Always free<br>
+                    ${t.footerPlace}<br>
+                    ${t.footerTagline}<br>
                     <a href="${SITE_URL}" style="color: ${BRAND.yellow}; text-decoration: none;">www.embassycinema.com</a>
                   </td>
                 </tr>
@@ -167,24 +256,21 @@ function emailLayout(label: string, headline: string, content: string): string {
     </html>`
 }
 
-function greeting(customerName: string, message: string): string {
+function greeting(locale: Locale, customerName: string, message: string): string {
   return `
-    <p style="margin: 0 0 8px 0; font-family: ${FONT_DISPLAY}; font-size: 16px; color: #000000;">Hello ${escapeHtml(customerName)},</p>
+    <p style="margin: 0 0 8px 0; font-family: ${FONT_DISPLAY}; font-size: 16px; color: #000000;">${COPY[locale].greeting(escapeHtml(customerName))}</p>
     <p style="margin: 0 0 24px 0; font-family: ${FONT_DISPLAY}; font-size: 16px; line-height: 1.5; color: #000000;">${message}</p>`
 }
 
-const ARRIVAL_NOTE = note(
-  "At the door",
-  "Please arrive at least 10 minutes before the screening. No ticket needed, just give your name at the door.",
-  "#f0f0f0",
-)
+const arrivalNote = (locale: Locale) => note(COPY[locale].arrivalTitle, COPY[locale].arrivalBody, "#f0f0f0")
 
 // ICS text values must escape backslashes, commas, semicolons and newlines
 function escapeIcsText(text: string): string {
   return text.replace(/\\/g, "\\\\").replace(/[,;]/g, (c) => `\\${c}`).replace(/\r?\n/g, "\\n")
 }
 
-function generateICSFile({ screening, seatNumber, customerName }: GuestEmailParams): string {
+function generateICSFile({ screening, seatNumber, customerName, locale }: GuestEmailParams): string {
+  const t = COPY[locale]
   const startDate = new Date(screening.showtime)
   const runningTime = screening.runningTime ?? DEFAULT_RUNNING_TIME_MINUTES
   const endDate = new Date(startDate.getTime() + runningTime * 60 * 1000)
@@ -206,44 +292,42 @@ UID:${uid}
 DTSTAMP:${formatICSDateUTC(new Date())}
 DTSTART:${formatICSDateUTC(startDate)}
 DTEND:${formatICSDateUTC(endDate)}
-SUMMARY:${title} at Embassy Cinema
-DESCRIPTION:Your booking confirmation for ${title}.\\n\\nSeat: ${seatLabel(seatNumber)}\\nPlease arrive 10 minutes early. No ticket required - just give your name at the door.
+SUMMARY:${t.icsSummary(title)}
+DESCRIPTION:${t.icsDescription(title, seatLabel(seatNumber))}
 LOCATION:Embassy Cinema
 ORGANIZER;CN=Embassy Cinema:mailto:bookings@embassycinema.com
 STATUS:CONFIRMED
 SEQUENCE:0
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Reminder: ${title} at Embassy Cinema in 1 hour
+DESCRIPTION:${t.icsAlarm(title)}
 TRIGGER:-PT1H
 END:VALARM
 END:VEVENT
 END:VCALENDAR`
 }
 
-export function confirmationEmailHtml({ customerName, seatNumber, screening }: GuestEmailParams) {
+export function confirmationEmailHtml({ customerName, seatNumber, screening, locale }: GuestEmailParams) {
+  const t = COPY[locale]
   return emailLayout(
-    "Booking confirmed",
-    "You&#39;re booked!",
-    greeting(customerName, "Thanks for your reservation. Your seat is confirmed for:") +
-      filmCard(screening, seatNumber) +
-      note(
-        "Add to calendar",
-        "We've attached a calendar invite to this email. Open the .ics file to add the screening to your calendar with a reminder.",
-        BRAND.cyan,
-      ) +
-      ARRIVAL_NOTE +
-      button(`${SITE_URL}/dashboard`, "My bookings →"),
+    locale,
+    t.confirmLabel,
+    t.confirmHeadline,
+    greeting(locale, customerName, t.confirmIntro) +
+      filmCard(screening, seatNumber, locale) +
+      note(t.calendarTitle, t.calendarBody, BRAND.cyan) +
+      arrivalNote(locale) +
+      button(`${SITE_URL}/dashboard`, t.myBookings),
   )
 }
 
 export async function sendBookingConfirmation(params: GuestEmailParams) {
-  const { to, screening } = params
+  const { to, screening, locale } = params
 
   const { data, error } = await getResend().emails.send({
     from: FROM,
     to: [to],
-    subject: `Booking Confirmed: ${screening.movieTitle} at Embassy Cinema`,
+    subject: COPY[locale].confirmSubject(screening.movieTitle),
     attachments: [
       {
         filename: `embassy-cinema-${screening.movieTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.ics`,
@@ -263,32 +347,34 @@ export async function sendBookingConfirmation(params: GuestEmailParams) {
 }
 
 // "today", "tomorrow" or the weekday, in Rome time
-function relativeDay(showtime: string, now = new Date()): string {
+function relativeDay(showtime: string, locale: Locale, now = new Date()): string {
+  const t = COPY[locale]
   const dayKey = (d: Date) => d.toLocaleDateString("sv-SE", { timeZone: CINEMA_TIME_ZONE })
   const screeningDay = dayKey(new Date(showtime))
-  if (screeningDay === dayKey(now)) return "today"
-  if (screeningDay === dayKey(new Date(now.getTime() + 24 * 60 * 60 * 1000))) return "tomorrow"
-  return `on ${formatScreeningTime(showtime).date}`
+  if (screeningDay === dayKey(now)) return t.today
+  if (screeningDay === dayKey(new Date(now.getTime() + 24 * 60 * 60 * 1000))) return t.tomorrow
+  return t.onDate(formatScreeningTime(showtime, locale).date)
 }
 
-export function reminderEmail({ to, customerName, seatNumber, screening }: GuestEmailParams) {
-  const when = `${relativeDay(screening.showtime)} at ${formatScreeningTime(screening.showtime).time}`
+export function reminderEmail({ to, customerName, seatNumber, screening, locale }: GuestEmailParams) {
+  const t = COPY[locale]
+  const day = relativeDay(screening.showtime, locale)
+  const when = t.when(day, formatScreeningTime(screening.showtime, locale).time)
+  const dashboardLink = (label: string) =>
+    `<a href="${SITE_URL}/dashboard" style="color: #000000; font-weight: 700;">${label}</a>`
 
   return {
     from: FROM,
     to: [to],
-    subject: `Reminder: ${screening.movieTitle} ${when} at Embassy Cinema`,
+    subject: t.reminderSubject(screening.movieTitle, when),
     html: emailLayout(
-      "Screening reminder",
-      `See you ${relativeDay(screening.showtime)}`,
-      greeting(customerName, `Just a reminder that you're booked for <strong>${escapeHtml(screening.movieTitle)}</strong> ${when}.`) +
-        filmCard(screening, seatNumber) +
-        ARRIVAL_NOTE +
-        note(
-          "Can't make it?",
-          `Please <a href="${SITE_URL}/dashboard" style="color: #000000; font-weight: 700;">cancel your booking</a> so someone else can have your seat.`,
-          BRAND.pink,
-        ),
+      locale,
+      t.reminderLabel,
+      t.reminderHeadline(day),
+      greeting(locale, customerName, t.reminderIntro(escapeHtml(screening.movieTitle), when)) +
+        filmCard(screening, seatNumber, locale) +
+        arrivalNote(locale) +
+        note(t.cancelTitle, t.cancelBody(dashboardLink), BRAND.pink),
     ),
   }
 }

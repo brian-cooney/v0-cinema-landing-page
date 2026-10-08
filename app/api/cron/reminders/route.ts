@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendReminders } from "@/lib/email"
+import { DEFAULT_LOCALE, isLocale } from "@/lib/i18n/config"
 
 // Run daily by Vercel Cron (see vercel.json). Emails every guest booked for a
 // screening in the next 24 hours who hasn't had a reminder yet, so each
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
   const { data: bookings, error } = await supabase
     .from("bookings")
     .select(
-      "id, seat_number, customer_name, customer_email, showtimes!inner(movie_title, showtime, image_url, running_time)",
+      "id, seat_number, customer_name, customer_email, locale, showtimes!inner(movie_title, showtime, image_url, running_time)",
     )
     .is("reminder_sent_at", null)
     .gte("showtimes.showtime", now.toISOString())
@@ -51,6 +52,8 @@ export async function GET(request: NextRequest) {
         imageUrl: showtime.image_url,
         runningTime: showtime.running_time,
       },
+      // NULL for bookings made before 008 and for admin bookings
+      locale: isLocale(booking.locale) ? booking.locale : DEFAULT_LOCALE,
     })),
   )
 
